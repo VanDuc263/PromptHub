@@ -27,6 +27,7 @@ export function PublicPromptHeader({
   onFork,
   onCopy,
   onAction,
+  onViewProfile,
 }: {
   saved: boolean;
   bookmarked: boolean;
@@ -38,6 +39,7 @@ export function PublicPromptHeader({
   onFork: () => void;
   onCopy: () => void;
   onAction: (label: string) => void;
+  onViewProfile: () => void;
 }) {
   return (
     <>
@@ -55,11 +57,11 @@ export function PublicPromptHeader({
             <h1 className="text-3xl font-bold tracking-[-.035em] text-slate-50 sm:text-4xl">{publicPrompt.title}</h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">{publicPrompt.description}</p>
             <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 text-[10px] text-slate-600">
-              <span className="inline-flex items-center gap-2">
+              <button type="button" onClick={onViewProfile} className="inline-flex items-center gap-2 rounded-lg outline-none transition hover:text-violet-300 focus-visible:ring-2 focus-visible:ring-violet-500/50">
                 <Avatar initials={publicPrompt.authorInitials} className="size-7 text-[9px]" />
                 <strong className="font-medium text-slate-300">{publicPrompt.author}</strong>
                 {publicPrompt.verified && <CheckCircle2 className="size-3.5 fill-sky-400/15 text-sky-400" aria-label="Verified creator" />}
-              </span>
+              </button>
               <span>{publicPrompt.publishedAt}</span>
               <span>{publicPrompt.updatedAt}</span>
               <Badge>{publicPrompt.category}</Badge>

@@ -59,6 +59,7 @@ export function PublicPromptDetailPage({
           onFork={() => setForkOpen(true)}
           onCopy={() => setCopyOpen(true)}
           onAction={onAction}
+          onViewProfile={() => onAction("Author profile opened")}
         />
 
         <div className="mt-5"><PromptHeroCard /></div>

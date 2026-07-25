@@ -152,7 +152,8 @@ export function AppSidebar({
                 active={
                   currentPage === item.label ||
                   (item.label === "Explore" &&
-                    currentPage === "Public prompt detail")
+                    (currentPage === "Public prompt detail" ||
+                      currentPage === "User profile public"))
                 }
                 collapsed={collapsed}
                 onClick={() => onNavigate(item.label)}

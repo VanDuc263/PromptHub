@@ -205,3 +205,67 @@ export interface CommunityComment {
   likes: number;
   tone: string;
 }
+
+export interface ProfilePrompt {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  tags: string[];
+  models: string[];
+  version: string;
+  rating: number;
+  copies: number;
+  forks: number;
+  bookmarks: number;
+  likes: number;
+  updatedAt: string;
+  featured?: boolean;
+  icon: LucideIcon;
+  accent: string;
+}
+
+export interface ProfileCollection {
+  id: number;
+  name: string;
+  description: string;
+  prompts: number;
+  followers: number;
+  updatedAt: string;
+  tags: string[];
+  icon: LucideIcon;
+  accent: string;
+}
+
+export interface ProfileActivity {
+  id: number;
+  type: "Prompts" | "Collections" | "Reviews" | "Followers" | "Profile";
+  description: string;
+  related?: string;
+  timestamp: string;
+  group: "Today" | "Yesterday" | "This Week" | "Earlier";
+  icon: LucideIcon;
+  tone: string;
+}
+
+export interface ProfileAchievement {
+  name: string;
+  description: string;
+  earnedAt: string;
+  icon: LucideIcon;
+  tone: string;
+  locked?: boolean;
+}
+
+export interface ProfileReview {
+  id: number;
+  reviewer: string;
+  initials: string;
+  rating: number;
+  prompt: string;
+  text: string;
+  date: string;
+  helpful: number;
+  reply?: string;
+  tone: string;
+}

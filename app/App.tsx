@@ -35,6 +35,12 @@ const PublicPromptDetailPage = lazy(() =>
   })),
 );
 
+const UserProfilePage = lazy(() =>
+  import("@/pages/user-profile-page").then((module) => ({
+    default: module.UserProfilePage,
+  })),
+);
+
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -64,6 +70,19 @@ export function App() {
     }
     if (label === "Opened public prompt detail") {
       setCurrentPage("Public prompt detail");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (
+      label === "Author profile opened" ||
+      label === "Đức Nguyễn's profile opened"
+    ) {
+      setCurrentPage("User profile public");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (label === "Profile opened") {
+      setCurrentPage("User profile owner");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -115,7 +134,14 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "Public prompt detail" ? (
+        {currentPage === "User profile public" || currentPage === "User profile owner" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <UserProfilePage
+              isOwner={currentPage === "User profile owner"}
+              onAction={handleAction}
+            />
+          </Suspense>
+        ) : currentPage === "Public prompt detail" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <PublicPromptDetailPage
               onBack={() => setCurrentPage("Explore")}
