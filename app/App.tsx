@@ -76,13 +76,14 @@ export function App() {
   const [collectionPrompt, setCollectionPrompt] = useState<string | null>(null);
 
   const handleAction = useCallback((label: string) => {
-    recordAction(label);
     if (label === "New prompt created" || label === "Create prompt opened") {
+      if (label === "New prompt created") recordAction(label);
       setCurrentPage("Create prompt");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     if (label === "Opened Java Code Reviewer") {
+      recordAction(label);
       setDetailInitialTab("overview");
       setCurrentPage("Prompt detail");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -115,6 +116,7 @@ export function App() {
       return;
     }
     if (label === "Opened public prompt detail") {
+      recordAction("Opened Spring Boot API Generator");
       setCurrentPage("Public prompt detail");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -123,6 +125,7 @@ export function App() {
       label === "Author profile opened" ||
       label === "Đức Nguyễn's profile opened"
     ) {
+      recordAction(label);
       setCurrentPage("User profile public");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -132,6 +135,7 @@ export function App() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    recordAction(label);
     setToast(label);
   }, [recordAction]);
 
@@ -181,7 +185,7 @@ export function App() {
             label === "History"
           ) {
             setCurrentPage(label);
-            if (label === "History") window.history.pushState({}, "", "/history");
+            window.history.pushState({}, "", label === "History" ? "/history" : "/");
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
           }
@@ -203,8 +207,14 @@ export function App() {
         {currentPage === "History" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <HistoryPage
-              onExplore={() => setCurrentPage("Explore")}
-              onDashboard={() => setCurrentPage("Home")}
+              onExplore={() => {
+                window.history.pushState({}, "", "/");
+                setCurrentPage("Explore");
+              }}
+              onDashboard={() => {
+                window.history.pushState({}, "", "/");
+                setCurrentPage("Home");
+              }}
               onAction={handleAction}
             />
           </Suspense>
@@ -301,6 +311,7 @@ export function App() {
         onOpenChange={(open) => !open && setCollectionPrompt(null)}
         promptTitle={collectionPrompt ?? ""}
         onDone={() => {
+          if (collectionPrompt) recordAction(`Add ${collectionPrompt} to collection`);
           setCollectionPrompt(null);
           setToast("Prompt added to collection");
         }}

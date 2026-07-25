@@ -27,7 +27,6 @@ import {
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ClearHistoryDialog, RemoveHistoryDialog } from "@/components/history/history-dialogs";
-import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { historySummary } from "@/data/history-data";
@@ -86,10 +85,10 @@ export function HistoryPage({ onExplore, onDashboard, onAction }: { onExplore: (
     const haystack = `${record.description} ${record.title} ${record.author ?? ""} ${record.type} ${record.category ?? ""} ${record.model ?? ""} ${record.collection ?? ""}`.toLowerCase();
     if (query && !haystack.includes(query.toLowerCase())) return false;
     if (!matchesQuickFilter(record, quickFilter)) return false;
-    if (advanced.activity !== "All activity types" && record.type !== advanced.activity.replace(" Prompt", "")) return false;
+    if (advanced.activity !== "All activity types" && record.type !== advancedActivityType(advanced.activity)) return false;
     if (advanced.content !== "All content" && record.contentType !== advanced.content) return false;
     if (advanced.source !== "All sources" && record.source !== advanced.source) return false;
-    return matchesDate(record, dateRange);
+    return matchesDate(record, advanced.date === "Any date" ? dateRange : advanced.date);
   }), [advanced, dateRange, query, quickFilter, records]);
 
   const groups = ["Today", "Yesterday", "This Week", "Earlier"] as const;
@@ -185,6 +184,12 @@ function matchesDate(record: HistoryRecord, range: string) { const age = Date.no
 function routeTypeToFilter(type: string | null) { const match = quickFilters.find((filter) => filter.toLowerCase() === type); return match ?? "All Activity"; }
 function routeRangeToLabel(range: string | null) { return ({ today: "Today", yesterday: "Yesterday", "7d": "Last 7 Days", "30d": "Last 30 Days", "90d": "Last 90 Days" } as Record<string, string>)[range ?? ""] ?? "Last 30 Days"; }
 function dateLabelToRoute(label: string) { return ({ Today: "today", Yesterday: "yesterday", "Last 7 Days": "7d", "Last 30 Days": "30d", "Last 90 Days": "90d", "Custom Range": "custom" } as Record<string, string>)[label] ?? "30d"; }
+function advancedActivityType(label: string): HistoryActivityType {
+  const mapped: Record<string, HistoryActivityType> = {
+    "Viewed Prompt": "Viewed", "Copied Prompt": "Copied", "Ran Prompt": "Run", "Created Prompt": "Created", "Edited Prompt": "Edited", "Created Version": "Created Version", "Forked Prompt": "Forked", "Saved Prompt": "Saved", "Removed from Saved": "Removed from Saved", "Added to Collection": "Added to Collection", "Removed from Collection": "Removed from Collection", "Created Collection": "Created Collection", "Updated Collection": "Updated Collection", "Deleted Prompt": "Deleted", "Restored Prompt": "Restored",
+  };
+  return mapped[label] ?? "Viewed";
+}
 
 function EmptyState({ icon: Icon, title, subtitle, action, onAction }: { icon: LucideIcon; title: string; subtitle: string; action: string; onAction: () => void }) { return <div className="rounded-2xl border border-dashed border-white/[.08] px-6 py-20 text-center"><div className="mx-auto grid size-16 place-items-center rounded-2xl bg-violet-500/[.05]"><Icon className="size-7 text-violet-400/60" /></div><h2 className="mt-5 text-base font-semibold text-slate-200">{title}</h2><p className="mt-2 text-sm text-slate-600">{subtitle}</p><Button className="mt-6 bg-violet-500 hover:bg-violet-400" onClick={onAction}>{action}</Button></div>; }
 function HistoryError({ onRetry, onDashboard }: { onRetry: () => void; onDashboard: () => void }) { return <div className="mx-auto max-w-[1000px] px-4 py-24 text-center"><div className="mx-auto grid size-16 place-items-center rounded-2xl bg-rose-500/[.07]"><FileClock className="size-7 text-rose-400" /></div><h1 className="mt-5 text-xl font-semibold text-slate-200">Unable to load history</h1><p className="mt-2 text-sm text-slate-600">Something went wrong while loading your activity.</p><div className="mt-6 flex justify-center gap-2"><Button onClick={onRetry}>Retry</Button><Button variant="secondary" onClick={onDashboard}>Go to Dashboard</Button></div></div>; }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { HistoryContext } from "@/context/history-context";
 import { initialHistoryRecords } from "@/data/history-data";
-import type { HistoryActivityType, HistoryRecord } from "@/types";
+import type { HistoryRecord } from "@/types";
 
 const storageKey = "prompthub:activity-history";
 
@@ -10,6 +10,9 @@ function parseAction(label: string): Pick<HistoryRecord, "type" | "title" | "des
   if (/opened|viewed/i.test(label)) return { type: "Viewed", title: cleanTitle, description: `Viewed “${cleanTitle}”`, contentType: label.includes("Community") ? "Community Prompt" : "Prompt", source: label.includes("Community") ? "Explore" : "My Prompts" };
   if (/copied/i.test(label)) return { type: "Copied", title: cleanTitle, description: `Copied “${cleanTitle}”`, contentType: "Prompt", source: "My Prompts" };
   if (/forked/i.test(label)) return { type: "Forked", title: cleanTitle, description: `Forked “${cleanTitle}” into My Prompts`, contentType: "Community Prompt", source: "Explore" };
+  if (/^ran /i.test(label)) return { type: "Run", title: cleanTitle.replace(/\s+again$/i, ""), description: `Ran “${cleanTitle.replace(/\s+again$/i, "")}”`, contentType: "Prompt", source: "My Prompts" };
+  if (/version .*created/i.test(label)) return { type: "Created Version", title: cleanTitle, description: label, contentType: "Prompt", source: "My Prompts" };
+  if (/prompt created|new prompt created/i.test(label)) return { type: "Created", title: "New Prompt", description: "Created a new prompt", contentType: "Prompt", source: "My Prompts" };
   if (/removed.*saved/i.test(label)) return { type: "Removed from Saved", title: cleanTitle, description: `Removed “${cleanTitle}” from Saved`, contentType: "Community Prompt", source: "Saved" };
   if (/saved/i.test(label)) return { type: "Saved", title: cleanTitle, description: `Saved “${cleanTitle}”`, contentType: "Community Prompt", source: "Explore" };
   if (/add.*collection/i.test(label)) return { type: "Added to Collection", title: cleanTitle, description: `Added “${cleanTitle}” to a collection`, contentType: "Prompt", source: "Collections" };
