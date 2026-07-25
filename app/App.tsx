@@ -23,6 +23,12 @@ const CompareVersionsPage = lazy(() =>
   })),
 );
 
+const ExplorePage = lazy(() =>
+  import("@/pages/explore-page").then((module) => ({
+    default: module.ExplorePage,
+  })),
+);
+
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -45,6 +51,11 @@ export function App() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    if (label === "Explore opened") {
+      setCurrentPage("Explore");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setToast(label);
   }, []);
 
@@ -54,7 +65,13 @@ export function App() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
-  const openSearch = useCallback(() => setSearchOpen(true), []);
+  const openSearch = useCallback(() => {
+    if (currentPage === "Explore") {
+      window.dispatchEvent(new Event("prompthub:focus-explore-search"));
+      return;
+    }
+    setSearchOpen(true);
+  }, [currentPage]);
   useKeyboardShortcut("k", openSearch, { ctrlOrMeta: true });
 
   return (
@@ -67,7 +84,7 @@ export function App() {
         onMobileClose={() => setMobileOpen(false)}
         onNavigate={(label) => {
           setMobileOpen(false);
-          if (label === "Home" || label === "My prompts") {
+          if (label === "Home" || label === "My prompts" || label === "Explore") {
             setCurrentPage(label);
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
@@ -87,7 +104,11 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "Compare versions" ? (
+        {currentPage === "Explore" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <ExplorePage onAction={handleAction} />
+          </Suspense>
+        ) : currentPage === "Compare versions" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <CompareVersionsPage
               initialOldVersion={compareOldVersion}

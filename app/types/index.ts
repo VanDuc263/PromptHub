@@ -140,3 +140,34 @@ export interface MetricComparison {
   oldValue: string;
   newValue: string;
 }
+
+export interface ExplorePrompt {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  tags: string[];
+  models: string[];
+  author: string;
+  authorInitials: string;
+  createdAt: string;
+  copies: number;
+  likes: number;
+  bookmarks: number;
+  rating: number;
+  tokens: number;
+  visibility: "Public" | "Unlisted";
+  snippet: string;
+  variables: string[];
+  icon: LucideIcon;
+  accent: string;
+  featured?: boolean;
+}
+
+export interface CommunityCreator {
+  name: string;
+  initials: string;
+  prompts: number;
+  saves: number;
+  tone: string;
+}
