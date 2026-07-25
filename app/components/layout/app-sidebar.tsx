@@ -23,13 +23,14 @@ import { cn } from "@/lib/utils";
 interface AppSidebarProps {
   collapsed: boolean;
   mobileOpen: boolean;
+  currentPage: string;
   onCollapse: () => void;
   onMobileClose: () => void;
   onNavigate: (label: string) => void;
 }
 
 const primaryItems = [
-  { label: "Home", icon: Home, active: true },
+  { label: "Home", icon: Home },
   { label: "Explore", icon: Compass },
 ];
 
@@ -105,6 +106,7 @@ function SidebarItem({
 export function AppSidebar({
   collapsed,
   mobileOpen,
+  currentPage,
   onCollapse,
   onMobileClose,
   onNavigate,
@@ -147,6 +149,7 @@ export function AppSidebar({
               <SidebarItem
                 key={item.label}
                 {...item}
+                active={currentPage === item.label}
                 collapsed={collapsed}
                 onClick={() => onNavigate(item.label)}
               />
@@ -160,6 +163,7 @@ export function AppSidebar({
               <SidebarItem
                 key={item.label}
                 {...item}
+                active={currentPage === item.label}
                 collapsed={collapsed}
                 onClick={() => onNavigate(item.label)}
               />

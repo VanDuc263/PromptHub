@@ -6,12 +6,14 @@ import { SearchDialog } from "@/components/search-dialog";
 import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { cn } from "@/lib/utils";
 import { HomePage } from "@/pages/home-page";
+import { MyPromptsPage } from "@/pages/my-prompts-page";
 
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState("Home");
 
   const handleAction = useCallback((label: string) => {
     setToast(label);
@@ -31,10 +33,16 @@ export function App() {
       <AppSidebar
         collapsed={sidebarCollapsed}
         mobileOpen={mobileOpen}
+        currentPage={currentPage}
         onCollapse={() => setSidebarCollapsed((value) => !value)}
         onMobileClose={() => setMobileOpen(false)}
         onNavigate={(label) => {
           setMobileOpen(false);
+          if (label === "Home" || label === "My prompts") {
+            setCurrentPage(label);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
           handleAction(`${label} opened`);
         }}
       />
@@ -50,7 +58,11 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        <HomePage onAction={handleAction} />
+        {currentPage === "My prompts" ? (
+          <MyPromptsPage onAction={handleAction} />
+        ) : (
+          <HomePage onAction={handleAction} />
+        )}
       </main>
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} onAction={handleAction} />
 

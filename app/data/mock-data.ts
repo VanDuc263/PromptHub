@@ -14,6 +14,7 @@ import type {
   QuickAction,
   Statistic,
   TrendingPrompt,
+  LibraryPrompt,
 } from "@/types";
 
 export const quickActions: QuickAction[] = [
@@ -111,4 +112,64 @@ export const activities: Activity[] = [
 export const collections = [
   { name: "Development", count: 42, icon: BookOpen },
   { name: "Writing", count: 18, icon: FileText },
+];
+
+export const libraryPrompts: LibraryPrompt[] = [
+  {
+    ...prompts[0],
+    category: "Programming",
+    status: "Published",
+    author: "Van Duc",
+  },
+  {
+    ...prompts[1],
+    title: "SQL Optimizer",
+    category: "Programming",
+    status: "Published",
+    author: "Van Duc",
+  },
+  {
+    ...prompts[2],
+    title: "Backend Interview",
+    visibility: "Private",
+    category: "Programming",
+    status: "Draft",
+    author: "Van Duc",
+  },
+  {
+    ...prompts[3],
+    category: "English",
+    status: "Published",
+    author: "Van Duc",
+  },
+  {
+    id: 5,
+    title: "Product Launch Copywriter",
+    description: "Create sharp launch messaging across landing pages, email, and social.",
+    tags: ["Marketing", "Copywriting", "Launch"],
+    visibility: "Public",
+    version: "v5",
+    updatedAt: "Jul 18",
+    uses: 486,
+    favorites: 74,
+    accent: "bg-rose-400",
+    category: "Marketing",
+    status: "Published",
+    author: "Van Duc",
+  },
+  {
+    id: 6,
+    title: "Technical Documentation Writer",
+    description: "Turn implementation notes into clear, structured developer documentation.",
+    tags: ["Writing", "Developer", "Docs"],
+    visibility: "Team",
+    version: "v1",
+    updatedAt: "Jul 16",
+    uses: 72,
+    favorites: 11,
+    accent: "bg-cyan-400",
+    category: "English",
+    status: "Draft",
+    author: "Van Duc",
+  },
 ];

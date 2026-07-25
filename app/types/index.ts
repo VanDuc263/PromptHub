@@ -49,3 +49,11 @@ export interface Activity {
   initials: string;
   tone: string;
 }
+
+export type PromptStatus = "Published" | "Draft";
+
+export interface LibraryPrompt extends Prompt {
+  category: "Programming" | "Marketing" | "English";
+  status: PromptStatus;
+  author: string;
+}
