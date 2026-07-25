@@ -119,3 +119,24 @@ export interface VariableChange {
   oldValue?: string;
   newValue?: string;
 }
+
+export type DiffLineType = "unchanged" | "added" | "removed" | "modified";
+
+export interface VersionDiffRow {
+  oldLine?: string;
+  newLine?: string;
+  oldType: DiffLineType;
+  newType: DiffLineType;
+}
+
+export interface VariableComparison {
+  name: string;
+  oldValue: string;
+  newValue: string;
+}
+
+export interface MetricComparison {
+  label: string;
+  oldValue: string;
+  newValue: string;
+}

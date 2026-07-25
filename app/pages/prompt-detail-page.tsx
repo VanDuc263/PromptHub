@@ -13,6 +13,7 @@ export function PromptDetailPage({
   initialTab = "overview",
   newVersionCreated = false,
   onCreateVersion,
+  onCompareVersion,
 }: {
   onBack: () => void;
   onEdit: () => void;
@@ -20,6 +21,7 @@ export function PromptDetailPage({
   initialTab?: DetailTabId;
   newVersionCreated?: boolean;
   onCreateVersion: () => void;
+  onCompareVersion: (version: string) => void;
 }) {
   const [favorite, setFavorite] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -61,6 +63,7 @@ export function PromptDetailPage({
               onTabChange={setActiveTab}
               onAction={onAction}
               onCreateVersion={onCreateVersion}
+              onCompareVersion={onCompareVersion}
               newVersionCreated={newVersionCreated}
             />
           </main>

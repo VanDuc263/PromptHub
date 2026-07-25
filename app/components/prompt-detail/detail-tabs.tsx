@@ -31,12 +31,14 @@ export function DetailTabs({
   onTabChange,
   onAction,
   onCreateVersion,
+  onCompareVersion,
   newVersionCreated,
 }: {
   activeTab: DetailTabId;
   onTabChange: (tab: DetailTabId) => void;
   onAction: (label: string) => void;
   onCreateVersion: () => void;
+  onCompareVersion: (version: string) => void;
   newVersionCreated: boolean;
 }) {
   return (
@@ -82,6 +84,7 @@ export function DetailTabs({
           <VersionsTab
             onAction={onAction}
             onCreateVersion={onCreateVersion}
+            onCompareVersion={onCompareVersion}
             newVersionCreated={newVersionCreated}
           />
         )}
@@ -104,10 +107,12 @@ function InfoCard({ title, children }: { title: string; children: React.ReactNod
 function VersionsTab({
   onAction,
   onCreateVersion,
+  onCompareVersion,
   newVersionCreated,
 }: {
   onAction: (label: string) => void;
   onCreateVersion: () => void;
+  onCompareVersion: (version: string) => void;
   newVersionCreated: boolean;
 }) {
   const versions = newVersionCreated
@@ -161,7 +166,7 @@ function VersionsTab({
             </div>
             <div className="mt-3 flex gap-1 sm:mt-0">
               <Button variant="ghost" size="sm" onClick={() => onAction(`${version.version} opened`)}><Eye className="size-3.5" /> View</Button>
-              <Button variant="ghost" size="sm" onClick={() => onAction(`Compare ${version.version} selected`)}><GitCompareArrows className="size-3.5" /> Compare</Button>
+              <Button variant="ghost" size="sm" onClick={() => onCompareVersion(version.version)}><GitCompareArrows className="size-3.5" /> Compare</Button>
             </div>
           </div>
         </div>

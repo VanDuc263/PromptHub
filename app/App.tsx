@@ -17,6 +17,12 @@ const CreateVersionPage = lazy(() =>
   })),
 );
 
+const CompareVersionsPage = lazy(() =>
+  import("@/pages/compare-versions-page").then((module) => ({
+    default: module.CompareVersionsPage,
+  })),
+);
+
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,6 +31,7 @@ export function App() {
   const [currentPage, setCurrentPage] = useState("Home");
   const [detailInitialTab, setDetailInitialTab] = useState<DetailTabId>("overview");
   const [newVersionCreated, setNewVersionCreated] = useState(false);
+  const [compareOldVersion, setCompareOldVersion] = useState("v2");
 
   const handleAction = useCallback((label: string) => {
     if (label === "New prompt created" || label === "Create prompt opened") {
@@ -80,7 +87,19 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "Create version" ? (
+        {currentPage === "Compare versions" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <CompareVersionsPage
+              initialOldVersion={compareOldVersion}
+              initialNewVersion={newVersionCreated ? "v5" : "v4"}
+              onBack={() => {
+                setDetailInitialTab("versions");
+                setCurrentPage("Prompt detail");
+              }}
+              onAction={handleAction}
+            />
+          </Suspense>
+        ) : currentPage === "Create version" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <CreateVersionPage
               onBack={() => {
@@ -104,6 +123,12 @@ export function App() {
             initialTab={detailInitialTab}
             newVersionCreated={newVersionCreated}
             onCreateVersion={() => setCurrentPage("Create version")}
+            onCompareVersion={(version) => {
+              setCompareOldVersion(
+                version === "v4" || version === "v5" ? "v2" : version,
+              );
+              setCurrentPage("Compare versions");
+            }}
           />
         ) : currentPage === "Create prompt" ? (
           <CreatePromptPage
