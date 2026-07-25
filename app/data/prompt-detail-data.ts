@@ -127,7 +127,7 @@ export const promptActivities: PromptDetailActivity[] = [
     id: 3,
     actor: "Lan",
     initials: "LN",
-    action: "added the prompt to Favorites.",
+    action: "saved the prompt.",
     time: "Yesterday",
     tone: "bg-rose-500/15 text-rose-300",
   },
@@ -144,6 +144,6 @@ export const promptActivities: PromptDetailActivity[] = [
 export const promptStats = [
   { label: "Total uses", shortLabel: "Uses", value: 128 },
   { label: "Copies", shortLabel: "Copies", value: 94 },
-  { label: "Favorites", shortLabel: "Favorites", value: 25 },
+  { label: "Saves", shortLabel: "Saves", value: 25 },
   { label: "Forks", shortLabel: "Forks", value: 8 },
 ];

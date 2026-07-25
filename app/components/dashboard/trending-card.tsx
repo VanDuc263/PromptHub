@@ -1,8 +1,9 @@
-import { Bookmark, Heart } from "lucide-react";
-import { useState } from "react";
+import { Bookmark } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { formatCompact } from "@/lib/utils";
+import { savedKeyForTitle } from "@/data/saved-data";
+import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import type { TrendingPrompt } from "@/types";
 
 export function TrendingCard({
@@ -12,10 +13,12 @@ export function TrendingCard({
   prompt: TrendingPrompt;
   onAction: (label: string) => void;
 }) {
-  const [saved, setSaved] = useState(false);
+  const savedId = savedKeyForTitle(prompt.title);
+  const { isSaved, toggleSaved } = useSavedPrompts();
+  const saved = isSaved(savedId);
   const toggleSave = () => {
-    setSaved((value) => !value);
-    onAction(saved ? `Removed ${prompt.title} from saved` : `Saved ${prompt.title}`);
+    const willSave = toggleSaved(savedId);
+    onAction(willSave ? `Saved ${prompt.title}` : `Removed ${prompt.title} from Saved`);
   };
 
   return (
@@ -35,7 +38,7 @@ export function TrendingCard({
         <span className="ml-2 text-[11px] text-slate-500">by <strong className="font-medium text-slate-300">{prompt.author}</strong></span>
         <div className="ml-auto flex items-center gap-3 text-[11px] text-slate-600">
           <span>{formatCompact(prompt.uses)} uses</span>
-          <span className="inline-flex items-center gap-1"><Heart className="size-3.5" />{prompt.favorites}</span>
+          <span className="inline-flex items-center gap-1"><Bookmark className="size-3.5" />{prompt.saves}</span>
         </div>
       </div>
     </article>

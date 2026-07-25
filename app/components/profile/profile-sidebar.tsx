@@ -4,14 +4,12 @@ import {
   Crown,
   Gauge,
   Sparkles,
-  TrendingUp,
   UserPlus,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  contributionLevels,
   endorsedSkills,
   suggestedCreators,
 } from "@/data/profile-data";
@@ -50,7 +48,6 @@ export function ProfileSidebar({
           ))}
         </div>
       </SidebarPanel>
-      <ContributionGraph />
       <FollowingSuggestions onAction={onAction} />
     </aside>
   );
@@ -72,25 +69,6 @@ function ProfileCompletion({ onEdit }: { onEdit: () => void }) {
   );
 }
 
-function ContributionGraph() {
-  return (
-    <SidebarPanel icon={TrendingUp} title="Contributions">
-      <div className="overflow-x-auto pb-1">
-        <div className="grid w-max grid-flow-col grid-rows-7 gap-0.5">
-          {contributionLevels.map((level, index) => {
-            const month = Math.floor(index / 30) + 1;
-            const day = (index % 28) + 1;
-            return <span key={index} title={`${level * 4} contributions on ${month}/${day}`} className={cn("size-2 rounded-[2px]", contributionColor(level))} />;
-          })}
-        </div>
-      </div>
-      <div className="mt-3 flex items-center justify-end gap-1 text-[8px] text-slate-700">
-        <span className="mr-1">Less</span>{[0, 1, 2, 3, 4].map((level) => <span key={level} className={cn("size-2 rounded-[2px]", contributionColor(level))} />)}<span className="ml-1">More</span>
-      </div>
-      <p className="mt-2 text-[8px] text-slate-700">1,284 contributions in the last 12 months</p>
-    </SidebarPanel>
-  );
-}
 
 function FollowingSuggestions({ onAction }: { onAction: (label: string) => void }) {
   const [followed, setFollowed] = useState<string[]>([]);
@@ -138,6 +116,4 @@ function skillWidth(value: number) {
   return "w-1/2";
 }
 
-function contributionColor(level: number) {
-  return ["bg-white/[.035]", "bg-violet-500/15", "bg-violet-500/30", "bg-violet-500/55", "bg-violet-400/85"][level];
-}
+

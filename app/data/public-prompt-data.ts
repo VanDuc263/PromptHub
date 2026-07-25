@@ -134,7 +134,7 @@ export const publicStats = {
   views: 18400,
   copies: 3240,
   forks: 486,
-  bookmarks: 572,
+  saves: 572,
   likes: 846,
   rating: 4.8,
 };

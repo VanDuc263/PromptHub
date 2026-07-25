@@ -1,11 +1,8 @@
 import {
   Bookmark,
   Clock3,
-  FolderHeart,
-  Heart,
   Medal,
   Tag,
-  TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -13,7 +10,6 @@ import {
   communityPrompts,
   exploreCategories,
   popularTags,
-  suggestedCollections,
   topCreators,
 } from "@/data/explore-data";
 import { cn, formatCompact } from "@/lib/utils";
@@ -66,8 +62,7 @@ export function ExploreLeftSidebar({
       </nav>
       <div className="my-4 hidden h-px bg-white/[.06] lg:block" />
       <div className="hidden space-y-1 lg:block">
-        <SideAction icon={Heart} label="Favorites" onClick={() => onAction("Community favorites opened")} />
-        <SideAction icon={Bookmark} label="Bookmarks" onClick={() => onAction("Community bookmarks opened")} />
+        <SideAction icon={Bookmark} label="Saved" onClick={() => onAction("Saved opened")} />
       </div>
     </aside>
   );
@@ -98,17 +93,7 @@ export function ExploreRightSidebar({
         </div>
       </CommunityPanel>
 
-      <CommunityPanel icon={TrendingUp} title="Weekly leaderboard">
-        <div className="space-y-2.5">
-          {topCreators.map((creator, index) => (
-            <div key={creator.name} className="flex items-center text-[10px]">
-              <span className={cn("grid size-5 place-items-center rounded-md font-mono text-[8px]", index === 0 ? "bg-amber-500/10 text-amber-400" : "bg-white/[.03] text-slate-700")}>#{index + 1}</span>
-              <span className="ml-2 text-slate-500">{creator.name}</span>
-              <span className="ml-auto text-slate-700">+{formatCompact(creator.saves / 4)}</span>
-            </div>
-          ))}
-        </div>
-      </CommunityPanel>
+
 
       <CommunityPanel icon={Tag} title="Popular tags">
         <div className="flex flex-wrap gap-1.5">
@@ -134,20 +119,7 @@ export function ExploreRightSidebar({
         </div>
       </CommunityPanel>
 
-      <CommunityPanel icon={FolderHeart} title="Suggested collections" className="sm:col-span-2 2xl:col-span-1">
-        <div className="space-y-2">
-          {suggestedCollections.map((collection) => {
-            const Icon = collection.icon;
-            return (
-              <button type="button" key={collection.title} onClick={() => onAction(`${collection.title} collection opened`)} className="flex w-full items-center rounded-lg border border-white/[.05] bg-white/[.02] p-2.5 text-left transition hover:border-white/[.1]">
-                <Icon className="size-3.5 text-emerald-400" />
-                <span className="ml-2 text-[10px] text-slate-400">{collection.title}</span>
-                <span className="ml-auto text-[8px] text-slate-700">{collection.count}</span>
-              </button>
-            );
-          })}
-        </div>
-      </CommunityPanel>
+
     </aside>
   );
 }

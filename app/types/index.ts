@@ -26,7 +26,7 @@ export interface Prompt {
   version: string;
   updatedAt: string;
   uses: number;
-  favorites: number;
+  saves: number;
   accent: string;
 }
 
@@ -37,7 +37,7 @@ export interface TrendingPrompt {
   initials: string;
   category: string;
   uses: number;
-  favorites: number;
+  saves: number;
 }
 
 export interface Activity {
@@ -153,7 +153,7 @@ export interface ExplorePrompt {
   createdAt: string;
   copies: number;
   likes: number;
-  bookmarks: number;
+  saves: number;
   rating: number;
   tokens: number;
   visibility: "Public" | "Unlisted";
@@ -217,7 +217,7 @@ export interface ProfilePrompt {
   rating: number;
   copies: number;
   forks: number;
-  bookmarks: number;
+  saves: number;
   likes: number;
   updatedAt: string;
   featured?: boolean;
@@ -268,4 +268,47 @@ export interface ProfileReview {
   helpful: number;
   reply?: string;
   tone: string;
+}
+
+export interface SavedPrompt {
+  id: string;
+  title: string;
+  description: string;
+  author: string;
+  authorInitials: string;
+  category: string;
+  tags: string[];
+  models: string[];
+  version: string;
+  rating: number;
+  copies: number;
+  forks: number;
+  updatedAt: string;
+  savedAt: string;
+  savedOrder: number;
+  visibility: "Public" | "Private";
+  language: string;
+  icon: LucideIcon;
+  accent: string;
+}
+
+export type CollectionVisibility = "Private" | "Public" | "Team";
+
+export interface PromptCollection {
+  id: string;
+  name: string;
+  description: string;
+  visibility: CollectionVisibility;
+  owner: string;
+  ownerInitials: string;
+  promptIds: string[];
+  followers: number;
+  views: number;
+  createdAt: string;
+  updatedAt: string;
+  tags: string[];
+  color: string;
+  allowComments: boolean;
+  allowFollowers: boolean;
+  following?: boolean;
 }

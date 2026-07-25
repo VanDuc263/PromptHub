@@ -5,6 +5,7 @@ import { DetailTabs, type DetailTabId } from "@/components/prompt-detail/detail-
 import { InformationPanel } from "@/components/prompt-detail/information-panel";
 import { PromptSummary } from "@/components/prompt-detail/prompt-summary";
 import { ShareDialog } from "@/components/prompt-detail/share-dialog";
+import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 
 export function PromptDetailPage({
   onBack,
@@ -23,7 +24,8 @@ export function PromptDetailPage({
   onCreateVersion: () => void;
   onCompareVersion: (version: string) => void;
 }) {
-  const [favorite, setFavorite] = useState(false);
+  const { isSaved, toggleSaved } = useSavedPrompts();
+  const saved = isSaved("java-code-reviewer");
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<DetailTabId>(initialTab);
@@ -42,11 +44,11 @@ export function PromptDetailPage({
     <>
       <div className="mx-auto max-w-[1680px] px-4 py-6 sm:px-6 xl:px-8">
         <DetailHeader
-          favorite={favorite}
+          saved={saved}
           onBack={onBack}
-          onFavorite={() => {
-            setFavorite((value) => !value);
-            onAction(favorite ? "Removed from favorites" : "Added to favorites");
+          onSaved={() => {
+            const willSave = toggleSaved("java-code-reviewer");
+            onAction(willSave ? "Prompt saved" : "Removed from Saved");
           }}
           onShare={() => setShareOpen(true)}
           onEdit={onEdit}

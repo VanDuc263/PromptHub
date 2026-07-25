@@ -10,6 +10,7 @@ import { MyPromptsPage } from "@/pages/my-prompts-page";
 import { CreatePromptPage } from "@/pages/create-prompt-page";
 import { PromptDetailPage } from "@/pages/prompt-detail-page";
 import type { DetailTabId } from "@/components/prompt-detail/detail-tabs";
+import { AddToCollectionDialog } from "@/components/collections/collection-dialogs";
 
 const CreateVersionPage = lazy(() =>
   import("@/pages/create-version-page").then((module) => ({
@@ -41,6 +42,18 @@ const UserProfilePage = lazy(() =>
   })),
 );
 
+const SavedPage = lazy(() =>
+  import("@/pages/saved-page").then((module) => ({
+    default: module.SavedPage,
+  })),
+);
+
+const CollectionsPage = lazy(() =>
+  import("@/pages/collections-page").then((module) => ({
+    default: module.CollectionsPage,
+  })),
+);
+
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -50,6 +63,7 @@ export function App() {
   const [detailInitialTab, setDetailInitialTab] = useState<DetailTabId>("overview");
   const [newVersionCreated, setNewVersionCreated] = useState(false);
   const [compareOldVersion, setCompareOldVersion] = useState("v2");
+  const [collectionPrompt, setCollectionPrompt] = useState<string | null>(null);
 
   const handleAction = useCallback((label: string) => {
     if (label === "New prompt created" || label === "Create prompt opened") {
@@ -66,6 +80,27 @@ export function App() {
     if (label === "Explore opened") {
       setCurrentPage("Explore");
       window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (label === "Saved opened") {
+      setCurrentPage("Saved");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (label === "Collections opened") {
+      setCurrentPage("Collections");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (
+      label === "Collection picker opened" ||
+      (label.startsWith("Add ") && label.endsWith(" to collection"))
+    ) {
+      setCollectionPrompt(
+        label === "Collection picker opened"
+          ? "Java Code Reviewer"
+          : label.slice(4, -" to collection".length),
+      );
       return;
     }
     if (label === "Opened public prompt detail") {
@@ -96,8 +131,16 @@ export function App() {
   }, [toast]);
 
   const openSearch = useCallback(() => {
-    if (currentPage === "Explore") {
-      window.dispatchEvent(new Event("prompthub:focus-explore-search"));
+    if (currentPage === "Explore" || currentPage === "Saved" || currentPage === "Collections") {
+      window.dispatchEvent(
+        new Event(
+          currentPage === "Explore"
+            ? "prompthub:focus-explore-search"
+            : currentPage === "Saved"
+              ? "prompthub:focus-saved-search"
+              : "prompthub:focus-collections-search",
+        ),
+      );
       return;
     }
     setSearchOpen(true);
@@ -114,7 +157,13 @@ export function App() {
         onMobileClose={() => setMobileOpen(false)}
         onNavigate={(label) => {
           setMobileOpen(false);
-          if (label === "Home" || label === "My prompts" || label === "Explore") {
+          if (
+            label === "Home" ||
+            label === "My prompts" ||
+            label === "Explore" ||
+            label === "Saved" ||
+            label === "Collections"
+          ) {
             setCurrentPage(label);
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
@@ -134,7 +183,18 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "User profile public" || currentPage === "User profile owner" ? (
+        {currentPage === "Collections" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <CollectionsPage onAction={handleAction} />
+          </Suspense>
+        ) : currentPage === "Saved" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <SavedPage
+              onExplore={() => setCurrentPage("Explore")}
+              onAction={handleAction}
+            />
+          </Suspense>
+        ) : currentPage === "User profile public" || currentPage === "User profile owner" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <UserProfilePage
               isOwner={currentPage === "User profile owner"}
@@ -210,6 +270,16 @@ export function App() {
         )}
       </main>
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} onAction={handleAction} />
+      <AddToCollectionDialog
+        key={collectionPrompt}
+        open={Boolean(collectionPrompt)}
+        onOpenChange={(open) => !open && setCollectionPrompt(null)}
+        promptTitle={collectionPrompt ?? ""}
+        onDone={() => {
+          setCollectionPrompt(null);
+          setToast("Prompt added to collection");
+        }}
+      />
 
       <div
         role="status"

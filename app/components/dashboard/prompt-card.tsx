@@ -1,8 +1,9 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   Copy,
+  Bookmark,
   ExternalLink,
-  Heart,
+  FolderPlus,
   LockKeyhole,
   MoreHorizontal,
   Pencil,
@@ -49,6 +50,7 @@ export function PromptCard({
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Opened ${prompt.title}`)}><ExternalLink /> Open prompt</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Copied ${prompt.title}`)}><Copy /> Copy</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Sharing ${prompt.title}`)}><Share2 /> Share</DropdownMenu.Item>
+              <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Add ${prompt.title} to collection`)}><FolderPlus /> Add to Collection</DropdownMenu.Item>
               <DropdownMenu.Separator className="my-1 h-px bg-white/[.07]" />
               <DropdownMenu.Item className="dropdown-item text-red-300" onSelect={() => onAction(`Delete requested for ${prompt.title}`)}><Trash2 /> Delete</DropdownMenu.Item>
             </DropdownMenu.Content>
@@ -66,7 +68,7 @@ export function PromptCard({
           <span className="rounded bg-white/[.04] px-1.5 py-0.5 text-slate-500">{prompt.version}</span>
           <span>{prompt.updatedAt}</span>
           <span className="ml-auto">{formatCompact(prompt.uses)} uses</span>
-          <span className="inline-flex items-center gap-1"><Heart className="size-3.5" /> {prompt.favorites}</span>
+          <span className="inline-flex items-center gap-1"><Bookmark className="size-3.5" /> {prompt.saves}</span>
         </div>
       </div>
 

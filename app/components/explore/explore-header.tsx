@@ -1,4 +1,4 @@
-import { Search, Sparkles, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
@@ -24,11 +24,7 @@ export function ExploreHeader({
       className="flex flex-col gap-6 border-b border-white/[.07] pb-6 lg:flex-row lg:items-end lg:justify-between"
     >
       <div className="max-w-2xl">
-        <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-emerald-400">
-          <Sparkles className="size-3" /> Community marketplace
-        </p>
         <h1 className="mt-3 text-3xl font-bold tracking-[-.035em] text-slate-50 sm:text-4xl">Explore Community</h1>
-        <p className="mt-3 text-sm leading-6 text-slate-500">Discover, save and reuse high-quality prompts created by the community.</p>
       </div>
       <div className="relative w-full lg:max-w-md">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-600" />

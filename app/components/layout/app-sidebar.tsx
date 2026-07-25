@@ -5,7 +5,7 @@ import {
   Clock3,
   Compass,
   FolderClosed,
-  Heart,
+  Bookmark,
   Home,
   PanelLeftClose,
   PanelLeftOpen,
@@ -36,7 +36,7 @@ const primaryItems = [
 
 const libraryItems = [
   { label: "My prompts", icon: Sparkle, count: 124 },
-  { label: "Favorites", icon: Heart, count: 58 },
+  { label: "Saved", icon: Bookmark, count: 48 },
   { label: "Collections", icon: FolderClosed },
   { label: "History", icon: Clock3 },
 ];

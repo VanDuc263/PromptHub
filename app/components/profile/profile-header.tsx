@@ -51,14 +51,9 @@ export function ProfileHeader({
       animate={{ opacity: 1, y: 0 }}
       className="overflow-hidden rounded-2xl border border-white/[.07] bg-[#161b22]"
     >
-      <div className="relative h-28 overflow-hidden border-b border-white/[.06] bg-[#11161d] sm:h-36">
-        <div className="absolute inset-0 opacity-35 [background-image:radial-gradient(circle_at_center,rgba(139,92,246,.2)_1px,transparent_1px)] [background-size:19px_19px]" />
-        <div className="absolute -right-14 -top-24 size-64 rounded-full border border-violet-500/10" />
-        <div className="absolute right-[18%] top-8 size-24 rotate-12 rounded-2xl border border-white/[.04]" />
-        <code className="absolute bottom-4 right-6 hidden text-[10px] text-violet-400/20 sm:block">{"{{ build_better_prompts }}"}</code>
-      </div>
 
-      <div className="px-5 pb-6 sm:px-7">
+
+      <div className="px-5 pb-6 sm:px-7 pt-20">
         <div className="-mt-12 flex flex-col gap-5 lg:flex-row lg:items-start">
           <Avatar initials={creatorProfile.initials} className="size-24 border-4 border-[#161b22] bg-violet-500/20 text-xl text-violet-200 shadow-xl" />
           <div className="min-w-0 flex-1 pt-1 lg:pt-14">

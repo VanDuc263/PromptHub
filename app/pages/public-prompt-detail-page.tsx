@@ -9,6 +9,7 @@ import { PublicPromptHeader } from "@/components/public-prompt/public-prompt-hea
 import { PublicPromptSidebar } from "@/components/public-prompt/public-prompt-sidebar";
 import { PublicPromptTabs } from "@/components/public-prompt/public-prompt-tabs";
 import { PromptHeroCard } from "@/components/public-prompt/prompt-hero-card";
+import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 
 export function PublicPromptDetailPage({
   onBack,
@@ -18,8 +19,8 @@ export function PublicPromptDetailPage({
   onAction: (label: string) => void;
 }) {
   const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const { isSaved, toggleSaved } = useSavedPrompts();
+  const saved = isSaved("spring-boot-api-generator");
   const [liked, setLiked] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [forkOpen, setForkOpen] = useState(false);
@@ -41,16 +42,16 @@ export function PublicPromptDetailPage({
       >
         <PublicPromptHeader
           saved={saved}
-          bookmarked={bookmarked}
+          bookmarked={saved}
           liked={liked}
           onBack={onBack}
           onSave={() => {
-            setSaved((value) => !value);
-            onAction(saved ? "Removed from My Library" : "Saved to My Library");
+            const willSave = toggleSaved("spring-boot-api-generator");
+            onAction(willSave ? "Saved to My Library" : "Removed from Saved");
           }}
           onBookmark={() => {
-            setBookmarked((value) => !value);
-            onAction(bookmarked ? "Bookmark removed" : "Prompt bookmarked");
+            const willSave = toggleSaved("spring-boot-api-generator");
+            onAction(willSave ? "Prompt saved" : "Removed from Saved");
           }}
           onLike={() => {
             setLiked((value) => !value);

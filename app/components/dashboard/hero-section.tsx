@@ -21,11 +21,9 @@ export function HeroSection({ onAction }: { onAction: (label: string) => void })
     <section className="relative overflow-hidden rounded-2xl border border-white/[.07] bg-[#161b22] px-6 py-8 sm:px-8 sm:py-10">
       <div className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-violet-500/[.055] blur-3xl" />
       <div className="relative max-w-2xl">
-        <p className="mb-3 text-xs font-medium uppercase tracking-[.14em] text-violet-400">
-          Your prompt workspace
-        </p>
+
         <h1 className="text-3xl font-bold tracking-[-.035em] text-slate-50 sm:text-[40px] sm:leading-[1.08]">
-          Good afternoon <span aria-hidden="true">👋</span>
+          Good afternoon !<span aria-hidden="true"></span>
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400 sm:text-base">
           Build, organize and share your AI prompts effortlessly.

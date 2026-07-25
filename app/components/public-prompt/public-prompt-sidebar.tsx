@@ -53,7 +53,7 @@ export function PublicPromptSidebar({
           <Stat icon={Eye} value={publicStats.views} label="Views" />
           <Stat icon={Copy} value={publicStats.copies} label="Copies" />
           <Stat icon={GitFork} value={publicStats.forks} label="Forks" />
-          <Stat icon={Bookmark} value={publicStats.bookmarks} label="Bookmarks" />
+          <Stat icon={Bookmark} value={publicStats.saves} label="Saves" />
           <Stat icon={Heart} value={publicStats.likes} label="Likes" />
           <Stat icon={Star} value={publicStats.rating} label="Avg. rating" decimal />
         </div>

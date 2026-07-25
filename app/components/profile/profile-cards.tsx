@@ -3,6 +3,7 @@ import {
   Copy,
   Eye,
   GitFork,
+  FolderPlus,
   Heart,
   Layers3,
   Star,
@@ -14,6 +15,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCompact } from "@/lib/utils";
+import { savedKeyForTitle } from "@/data/saved-data";
+import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import type {
   ProfileAchievement,
   ProfileActivity,
@@ -30,7 +33,9 @@ export function CreatorPromptCard({
   layout?: "grid" | "list";
   onAction: (label: string) => void;
 }) {
-  const [bookmarked, setBookmarked] = useState(false);
+  const savedId = savedKeyForTitle(prompt.title);
+  const { isSaved, toggleSaved } = useSavedPrompts();
+  const bookmarked = isSaved(savedId);
   const Icon = prompt.icon;
   return (
     <motion.article
@@ -59,14 +64,15 @@ export function CreatorPromptCard({
           <span className="inline-flex items-center gap-1"><Copy className="size-3" />{formatCompact(prompt.copies)}</span>
           <span className="inline-flex items-center gap-1"><GitFork className="size-3" />{formatCompact(prompt.forks)}</span>
           <span className="inline-flex items-center gap-1"><Heart className="size-3" />{formatCompact(prompt.likes)}</span>
-          <span className="inline-flex items-center gap-1"><Bookmark className="size-3" />{formatCompact(prompt.bookmarks)}</span>
+          <span className="inline-flex items-center gap-1"><Bookmark className="size-3" />{formatCompact(prompt.saves)}</span>
         </div>
       </div>
       <div className={cn("flex gap-1", layout === "grid" ? "mt-4" : "mt-4 md:mt-0 md:flex-col")}>
         <Button variant="ghost" size="sm" onClick={() => onAction(`Opened ${prompt.title}`)}><Eye className="size-3.5" /> View</Button>
         <Button variant="ghost" size="sm" onClick={() => onAction(`${prompt.title} copied`)}><Copy className="size-3.5" /></Button>
         <Button variant="ghost" size="sm" onClick={() => onAction(`${prompt.title} forked`)}><GitFork className="size-3.5" /></Button>
-        <Button variant="ghost" size="sm" onClick={() => { setBookmarked((value) => !value); onAction(bookmarked ? "Bookmark removed" : "Prompt bookmarked"); }}>
+        <Button variant="ghost" size="sm" aria-label="Add to Collection" onClick={() => onAction(`Add ${prompt.title} to collection`)}><FolderPlus className="size-3.5" /></Button>
+        <Button variant="ghost" size="sm" aria-label={bookmarked ? "Remove from Saved" : "Save prompt"} onClick={() => { const willSave = toggleSaved(savedId); onAction(willSave ? "Prompt saved" : "Removed from Saved"); }}>
           <Bookmark className={cn("size-3.5", bookmarked && "fill-violet-400 text-violet-400")} />
         </Button>
       </div>

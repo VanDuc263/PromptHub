@@ -70,9 +70,7 @@ export function MyPromptsPage({
       <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 xl:px-8">
         <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-violet-400">
-              Library
-            </p>
+
             <h1 className="mt-2 text-2xl font-bold tracking-[-.03em] text-slate-50 sm:text-3xl">
               My Prompts
             </h1>

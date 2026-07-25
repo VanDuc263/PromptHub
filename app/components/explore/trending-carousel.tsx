@@ -1,11 +1,12 @@
 import { Bookmark, Copy, Heart, Star } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PromptCover } from "@/components/explore/prompt-cover";
 import { communityPrompts } from "@/data/explore-data";
+import { savedKeyForTitle } from "@/data/saved-data";
+import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import { formatCompact } from "@/lib/utils";
 
 export function TrendingCarousel({
@@ -40,7 +41,9 @@ function FeaturedPromptCard({
   index: number;
   onOpen: () => void;
 }) {
-  const [saved, setSaved] = useState(false);
+  const savedId = savedKeyForTitle(prompt.title);
+  const { isSaved, toggleSaved } = useSavedPrompts();
+  const saved = isSaved(savedId);
 
   return (
     <motion.article
@@ -58,9 +61,9 @@ function FeaturedPromptCard({
         <Button
           variant="icon"
           size="icon"
-          onClick={() => setSaved((value) => !value)}
+          onClick={() => toggleSaved(savedId)}
           className="absolute right-3 top-3 bg-[#0d1117]/80 backdrop-blur"
-          aria-label={saved ? "Remove bookmark" : "Bookmark prompt"}
+          aria-label={saved ? "Remove from Saved" : "Save prompt"}
         >
           <Bookmark className={`size-4 ${saved ? "fill-emerald-400 text-emerald-400" : ""}`} />
         </Button>

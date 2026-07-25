@@ -7,7 +7,7 @@ import {
   Edit3,
   Ellipsis,
   FolderInput,
-  Heart,
+  Bookmark,
   Play,
   Share2,
   Trash2,
@@ -17,18 +17,18 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function DetailHeader({
-  favorite,
+  saved,
   onBack,
-  onFavorite,
+  onSaved,
   onShare,
   onEdit,
   onUse,
   onAction,
   onDelete,
 }: {
-  favorite: boolean;
+  saved: boolean;
   onBack: () => void;
-  onFavorite: () => void;
+  onSaved: () => void;
   onShare: () => void;
   onEdit: () => void;
   onUse: () => void;
@@ -53,8 +53,8 @@ export function DetailHeader({
         </div>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <Button variant="icon" size="icon" onClick={onFavorite} aria-label={favorite ? "Remove from favorites" : "Add to favorites"}>
-            <Heart className={cn("size-[17px]", favorite && "fill-rose-400 text-rose-400")} />
+          <Button variant="icon" size="icon" onClick={onSaved} aria-label={saved ? "Remove from Saved" : "Save prompt"}>
+            <Bookmark className={cn("size-[17px]", saved && "fill-emerald-400 text-emerald-400")} />
           </Button>
           <Button variant="icon" size="icon" onClick={onShare} aria-label="Share prompt">
             <Share2 className="size-[17px]" />
@@ -73,7 +73,7 @@ export function DetailHeader({
               <DropdownMenu.Content align="end" sideOffset={7} className="dropdown-content w-48 p-1.5">
                 <DropdownMenu.Item className="dropdown-item" onSelect={onUse}><Play /> Use prompt</DropdownMenu.Item>
                 <DropdownMenu.Item className="dropdown-item" onSelect={onEdit}><Edit3 /> Edit prompt</DropdownMenu.Item>
-                <DropdownMenu.Item className="dropdown-item" onSelect={onFavorite}><Heart /> {favorite ? "Unfavorite" : "Favorite"}</DropdownMenu.Item>
+                <DropdownMenu.Item className="dropdown-item" onSelect={onSaved}><Bookmark /> {saved ? "Remove from Saved" : "Save prompt"}</DropdownMenu.Item>
                 <DropdownMenu.Item className="dropdown-item" onSelect={onShare}><Share2 /> Share</DropdownMenu.Item>
                 <DropdownMenu.Separator className="my-1 h-px bg-white/[.07]" />
                 <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction("Prompt duplicated")}><CopyPlus /> Duplicate</DropdownMenu.Item>

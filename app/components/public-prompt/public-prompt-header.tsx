@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Copy,
   GitFork,
+  FolderPlus,
   Heart,
   Library,
   Share2,
@@ -86,9 +87,10 @@ export function PublicPromptHeader({
         </Button>
         <Button variant="secondary" onClick={onFork}><GitFork className="size-4" /> Fork prompt</Button>
         <Button variant="secondary" onClick={onCopy}><Copy className="size-4" /> Copy prompt</Button>
+        <Button variant="secondary" onClick={() => onAction(`Add ${publicPrompt.title} to collection`)}><FolderPlus className="size-4" /> Add to Collection</Button>
         <Button variant="ghost" onClick={() => onAction("Share link copied")}><Share2 className="size-4" /><span className="hidden sm:inline">Share</span></Button>
         <Button variant="ghost" onClick={() => onAction("Report dialog opened")}><ShieldAlert className="size-4" /><span className="hidden md:inline">Report</span></Button>
-        <Button variant="icon" size="icon" onClick={onBookmark} aria-label={bookmarked ? "Remove bookmark" : "Bookmark prompt"}>
+        <Button variant="icon" size="icon" onClick={onBookmark} aria-label={bookmarked ? "Remove from Saved" : "Save prompt"}>
           <Bookmark className={cn("size-4", bookmarked && "fill-emerald-400 text-emerald-400")} />
         </Button>
         <Button variant="ghost" onClick={onLike}>

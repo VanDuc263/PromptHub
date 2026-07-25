@@ -2,6 +2,7 @@ import {
   Bookmark,
   Copy,
   Eye,
+  FolderPlus,
   Globe2,
   Heart,
   Star,
@@ -14,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PromptCover } from "@/components/explore/prompt-cover";
 import { cn, formatCompact } from "@/lib/utils";
+import { savedKeyForTitle } from "@/data/saved-data";
+import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import type { ExplorePrompt } from "@/types";
 
 export function MarketplaceCard({
@@ -28,7 +31,9 @@ export function MarketplaceCard({
   onAction: (label: string) => void;
 }) {
   const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const savedId = savedKeyForTitle(prompt.title);
+  const { isSaved, toggleSaved } = useSavedPrompts();
+  const bookmarked = isSaved(savedId);
 
   return (
     <motion.article
@@ -72,7 +77,7 @@ export function MarketplaceCard({
           <div className="ml-auto flex items-center gap-2.5 text-[9px] text-slate-600">
             <span className="inline-flex items-center gap-1"><Copy className="size-3" />{formatCompact(prompt.copies)}</span>
             <span className="inline-flex items-center gap-1"><Heart className="size-3" />{formatCompact(prompt.likes + (liked ? 1 : 0))}</span>
-            <span className="inline-flex items-center gap-1"><Bookmark className="size-3" />{formatCompact(prompt.bookmarks + (bookmarked ? 1 : 0))}</span>
+            <span className="inline-flex items-center gap-1"><Bookmark className="size-3" />{formatCompact(prompt.saves + (bookmarked ? 1 : 0))}</span>
           </div>
         </div>
 
@@ -93,12 +98,15 @@ export function MarketplaceCard({
             variant="ghost"
             size="sm"
             onClick={() => {
-              setBookmarked((value) => !value);
-              onAction(bookmarked ? "Bookmark removed" : "Prompt bookmarked");
+              const willSave = toggleSaved(savedId);
+              onAction(willSave ? "Prompt saved" : "Removed from Saved");
             }}
-            aria-label={bookmarked ? "Remove bookmark" : "Bookmark prompt"}
+            aria-label={bookmarked ? "Remove from Saved" : "Save prompt"}
           >
             <Bookmark className={cn("size-3.5", bookmarked && "fill-emerald-400 text-emerald-400")} />
+          </Button>
+          <Button variant="ghost" size="sm" aria-label="Add to Collection" onClick={() => onAction(`Add ${prompt.title} to collection`)}>
+            <FolderPlus className="size-3.5" />
           </Button>
           <Button
             variant="ghost"

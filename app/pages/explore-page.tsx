@@ -58,7 +58,7 @@ export function ExplorePage({
       if (filters.sort === "Newest") return a.id > b.id ? -1 : 1;
       if (filters.sort === "Most Copied") return b.copies - a.copies;
       if (filters.sort === "Highest Rated") return b.rating - a.rating;
-      if (filters.sort === "Most Saved") return b.bookmarks - a.bookmarks;
+      if (filters.sort === "Most Saved") return b.saves - a.saves;
       return b.copies + b.likes - (a.copies + a.likes);
     });
   }, [filters, query]);
