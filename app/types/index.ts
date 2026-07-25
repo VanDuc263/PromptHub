@@ -79,3 +79,30 @@ export interface PromptEditorMetadata {
   language: string;
   tags: string[];
 }
+
+export interface PromptDetailVariable {
+  name: string;
+  label: string;
+  type: "Text" | "Long Text" | "Select";
+  required: boolean;
+  defaultValue: string;
+  placeholder: string;
+  options?: string[];
+}
+
+export interface PromptVersion {
+  version: string;
+  note: string;
+  author: string;
+  createdAt: string;
+  current?: boolean;
+}
+
+export interface PromptDetailActivity {
+  id: number;
+  actor: string;
+  initials: string;
+  action: string;
+  time: string;
+  tone: string;
+}

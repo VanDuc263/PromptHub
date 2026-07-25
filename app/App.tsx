@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { HomePage } from "@/pages/home-page";
 import { MyPromptsPage } from "@/pages/my-prompts-page";
 import { CreatePromptPage } from "@/pages/create-prompt-page";
+import { PromptDetailPage } from "@/pages/prompt-detail-page";
 
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -19,6 +20,11 @@ export function App() {
   const handleAction = useCallback((label: string) => {
     if (label === "New prompt created" || label === "Create prompt opened") {
       setCurrentPage("Create prompt");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (label === "Opened Java Code Reviewer") {
+      setCurrentPage("Prompt detail");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -64,7 +70,13 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "Create prompt" ? (
+        {currentPage === "Prompt detail" ? (
+          <PromptDetailPage
+            onBack={() => setCurrentPage("My prompts")}
+            onEdit={() => setCurrentPage("Create prompt")}
+            onAction={handleAction}
+          />
+        ) : currentPage === "Create prompt" ? (
           <CreatePromptPage
             onBack={() => setCurrentPage("My prompts")}
             onAction={handleAction}
