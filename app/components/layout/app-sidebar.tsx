@@ -163,7 +163,10 @@ export function AppSidebar({
               <SidebarItem
                 key={item.label}
                 {...item}
-                active={currentPage === item.label}
+                active={
+                  currentPage === item.label ||
+                  (item.label === "My prompts" && currentPage === "Create prompt")
+                }
                 collapsed={collapsed}
                 onClick={() => onNavigate(item.label)}
               />

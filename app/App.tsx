@@ -7,6 +7,7 @@ import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { cn } from "@/lib/utils";
 import { HomePage } from "@/pages/home-page";
 import { MyPromptsPage } from "@/pages/my-prompts-page";
+import { CreatePromptPage } from "@/pages/create-prompt-page";
 
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -16,6 +17,11 @@ export function App() {
   const [currentPage, setCurrentPage] = useState("Home");
 
   const handleAction = useCallback((label: string) => {
+    if (label === "New prompt created" || label === "Create prompt opened") {
+      setCurrentPage("Create prompt");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setToast(label);
   }, []);
 
@@ -58,8 +64,16 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "My prompts" ? (
-          <MyPromptsPage onAction={handleAction} />
+        {currentPage === "Create prompt" ? (
+          <CreatePromptPage
+            onBack={() => setCurrentPage("My prompts")}
+            onAction={handleAction}
+          />
+        ) : currentPage === "My prompts" ? (
+          <MyPromptsPage
+            onAction={handleAction}
+            onCreatePrompt={() => setCurrentPage("Create prompt")}
+          />
         ) : (
           <HomePage onAction={handleAction} />
         )}

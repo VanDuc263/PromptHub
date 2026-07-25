@@ -15,6 +15,7 @@ import type {
   Statistic,
   TrendingPrompt,
   LibraryPrompt,
+  PromptVariable,
 } from "@/types";
 
 export const quickActions: QuickAction[] = [
@@ -173,3 +174,81 @@ export const libraryPrompts: LibraryPrompt[] = [
     author: "Van Duc",
   },
 ];
+
+export const promptCategories = [
+  "Programming",
+  "Marketing",
+  "Writing",
+  "Product",
+  "Education",
+  "Research",
+];
+
+export const aiModels = [
+  "GPT-5",
+  "GPT-4.1",
+  "Claude Sonnet 4",
+  "Gemini 2.5 Pro",
+  "Model agnostic",
+];
+
+export const promptLanguages = [
+  "English",
+  "Vietnamese",
+  "Japanese",
+  "Spanish",
+  "Multilingual",
+];
+
+export const suggestedTags = [
+  "Code Review",
+  "Java",
+  "Backend",
+  "Clean Code",
+  "Engineering",
+  "Documentation",
+];
+
+export const defaultPromptVariables: PromptVariable[] = [
+  {
+    id: "variable-role",
+    name: "role",
+    label: "Reviewer role",
+    type: "Text",
+    required: true,
+    placeholder: "Senior Java engineer",
+  },
+  {
+    id: "variable-source-code",
+    name: "source_code",
+    label: "Source code",
+    type: "Long Text",
+    required: true,
+    placeholder: "Paste the code to review",
+  },
+  {
+    id: "variable-requirements",
+    name: "requirements",
+    label: "Requirements",
+    type: "Select",
+    required: false,
+    placeholder: "Choose a review focus",
+    options: ["SOLID principles", "Performance", "Security", "Clean Code"],
+  },
+];
+
+export const initialPromptContent = `Act as a {{role}}.
+
+Review the following source code:
+
+{{source_code}}
+
+Focus the review on {{requirements}}.
+
+Return:
+1. A concise summary of the approach
+2. Critical issues ordered by severity
+3. Concrete code improvements
+4. A revised implementation where useful
+
+Be direct, technically precise, and explain the reasoning behind each recommendation.`;

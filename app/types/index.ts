@@ -57,3 +57,25 @@ export interface LibraryPrompt extends Prompt {
   status: PromptStatus;
   author: string;
 }
+
+export type VariableType = "Text" | "Long Text" | "Number" | "Select";
+
+export interface PromptVariable {
+  id: string;
+  name: string;
+  label: string;
+  type: VariableType;
+  required: boolean;
+  placeholder: string;
+  options?: string[];
+}
+
+export interface PromptEditorMetadata {
+  title: string;
+  description: string;
+  category: string;
+  visibility: "Private" | "Public" | "Workspace";
+  model: string;
+  language: string;
+  tags: string[];
+}

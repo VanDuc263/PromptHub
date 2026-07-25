@@ -10,7 +10,6 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { NewPromptDialog } from "@/components/prompts/new-prompt-dialog";
 import { PromptListItem } from "@/components/prompts/prompt-list-item";
 import { Button } from "@/components/ui/button";
 import { libraryPrompts } from "@/data/mock-data";
@@ -19,10 +18,15 @@ import { cn } from "@/lib/utils";
 const categoryFilters = ["Programming", "Marketing", "English"] as const;
 const stateFilters = ["Private", "Public", "Draft"] as const;
 
-export function MyPromptsPage({ onAction }: { onAction: (label: string) => void }) {
+export function MyPromptsPage({
+  onAction,
+  onCreatePrompt,
+}: {
+  onAction: (label: string) => void;
+  onCreatePrompt: () => void;
+}) {
   const [query, setQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [newPromptOpen, setNewPromptOpen] = useState(false);
   const [sortNewest, setSortNewest] = useState(true);
 
   const toggleFilter = (filter: string) => {
@@ -76,7 +80,7 @@ export function MyPromptsPage({ onAction }: { onAction: (label: string) => void 
               Create, refine, and manage every prompt in your library.
             </p>
           </div>
-          <Button className="w-full sm:w-auto" onClick={() => setNewPromptOpen(true)}>
+          <Button className="w-full sm:w-auto" onClick={onCreatePrompt}>
             <Plus className="size-4" /> New prompt
           </Button>
         </header>
@@ -194,12 +198,6 @@ export function MyPromptsPage({ onAction }: { onAction: (label: string) => void 
           <p>{libraryPrompts.length} prompts in your personal workspace</p>
         </footer>
       </div>
-
-      <NewPromptDialog
-        open={newPromptOpen}
-        onOpenChange={setNewPromptOpen}
-        onCreate={(title) => onAction(`${title} created as a draft`)}
-      />
     </>
   );
 }
