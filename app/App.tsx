@@ -1,5 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopNavbar } from "@/components/layout/top-navbar";
 import { SearchDialog } from "@/components/search-dialog";
@@ -9,6 +9,13 @@ import { HomePage } from "@/pages/home-page";
 import { MyPromptsPage } from "@/pages/my-prompts-page";
 import { CreatePromptPage } from "@/pages/create-prompt-page";
 import { PromptDetailPage } from "@/pages/prompt-detail-page";
+import type { DetailTabId } from "@/components/prompt-detail/detail-tabs";
+
+const CreateVersionPage = lazy(() =>
+  import("@/pages/create-version-page").then((module) => ({
+    default: module.CreateVersionPage,
+  })),
+);
 
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -16,6 +23,8 @@ export function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState("Home");
+  const [detailInitialTab, setDetailInitialTab] = useState<DetailTabId>("overview");
+  const [newVersionCreated, setNewVersionCreated] = useState(false);
 
   const handleAction = useCallback((label: string) => {
     if (label === "New prompt created" || label === "Create prompt opened") {
@@ -24,6 +33,7 @@ export function App() {
       return;
     }
     if (label === "Opened Java Code Reviewer") {
+      setDetailInitialTab("overview");
       setCurrentPage("Prompt detail");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -70,11 +80,30 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "Prompt detail" ? (
+        {currentPage === "Create version" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <CreateVersionPage
+              onBack={() => {
+                setDetailInitialTab("versions");
+                setCurrentPage("Prompt detail");
+              }}
+              onGoToEditor={() => setCurrentPage("Create prompt")}
+              onSuccess={(version) => {
+                setNewVersionCreated(true);
+                setDetailInitialTab("versions");
+                setCurrentPage("Prompt detail");
+                handleAction(`Version ${version} created successfully.`);
+              }}
+            />
+          </Suspense>
+        ) : currentPage === "Prompt detail" ? (
           <PromptDetailPage
             onBack={() => setCurrentPage("My prompts")}
             onEdit={() => setCurrentPage("Create prompt")}
             onAction={handleAction}
+            initialTab={detailInitialTab}
+            newVersionCreated={newVersionCreated}
+            onCreateVersion={() => setCurrentPage("Create version")}
           />
         ) : currentPage === "Create prompt" ? (
           <CreatePromptPage
@@ -102,6 +131,24 @@ export function App() {
       >
         <CheckCircle2 className="size-4 text-emerald-400" />
         {toast}
+      </div>
+    </div>
+  );
+}
+
+function VersionPageSkeleton() {
+  return (
+    <div className="mx-auto max-w-[1580px] animate-pulse px-4 py-6 sm:px-6 xl:px-8">
+      <div className="h-16 border-b border-white/[.07]" />
+      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(340px,.72fr)_minmax(520px,1.28fr)]">
+        <div className="space-y-5">
+          <div className="h-44 rounded-2xl border border-white/[.06] bg-[#161b22]" />
+          <div className="h-[520px] rounded-2xl border border-white/[.06] bg-[#161b22]" />
+        </div>
+        <div className="space-y-5">
+          <div className="h-40 rounded-2xl border border-white/[.06] bg-[#161b22]" />
+          <div className="h-[560px] rounded-2xl border border-white/[.06] bg-[#161b22]" />
+        </div>
       </div>
     </div>
   );

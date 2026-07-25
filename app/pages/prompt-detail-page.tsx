@@ -10,15 +10,21 @@ export function PromptDetailPage({
   onBack,
   onEdit,
   onAction,
+  initialTab = "overview",
+  newVersionCreated = false,
+  onCreateVersion,
 }: {
   onBack: () => void;
   onEdit: () => void;
   onAction: (label: string) => void;
+  initialTab?: DetailTabId;
+  newVersionCreated?: boolean;
+  onCreateVersion: () => void;
 }) {
   const [favorite, setFavorite] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<DetailTabId>("overview");
+  const [activeTab, setActiveTab] = useState<DetailTabId>(initialTab);
 
   const usePrompt = () => {
     setActiveTab("overview");
@@ -50,7 +56,13 @@ export function PromptDetailPage({
         <div className="mt-6 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_320px]">
           <main className="min-w-0 space-y-5">
             <PromptSummary />
-            <DetailTabs activeTab={activeTab} onTabChange={setActiveTab} onAction={onAction} />
+            <DetailTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              onAction={onAction}
+              onCreateVersion={onCreateVersion}
+              newVersionCreated={newVersionCreated}
+            />
           </main>
           <InformationPanel onEdit={onEdit} onAction={onAction} />
         </div>

@@ -6,6 +6,7 @@ import {
   Clock3,
   Eye,
   GitCompareArrows,
+  GitBranchPlus,
   Info,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -29,10 +30,14 @@ export function DetailTabs({
   activeTab,
   onTabChange,
   onAction,
+  onCreateVersion,
+  newVersionCreated,
 }: {
   activeTab: DetailTabId;
   onTabChange: (tab: DetailTabId) => void;
   onAction: (label: string) => void;
+  onCreateVersion: () => void;
+  newVersionCreated: boolean;
 }) {
   return (
     <section>
@@ -73,7 +78,13 @@ export function DetailTabs({
             </div>
           </div>
         )}
-        {activeTab === "versions" && <VersionsTab onAction={onAction} />}
+        {activeTab === "versions" && (
+          <VersionsTab
+            onAction={onAction}
+            onCreateVersion={onCreateVersion}
+            newVersionCreated={newVersionCreated}
+          />
+        )}
         {activeTab === "activity" && <ActivityTab />}
         {activeTab === "analytics" && <AnalyticsTab />}
       </div>
@@ -90,12 +101,52 @@ function InfoCard({ title, children }: { title: string; children: React.ReactNod
   );
 }
 
-function VersionsTab({ onAction }: { onAction: (label: string) => void }) {
+function VersionsTab({
+  onAction,
+  onCreateVersion,
+  newVersionCreated,
+}: {
+  onAction: (label: string) => void;
+  onCreateVersion: () => void;
+  newVersionCreated: boolean;
+}) {
+  const versions = newVersionCreated
+    ? [
+        {
+          version: "v5",
+          note: "Improve reasoning quality",
+          author: "Đức Nguyễn",
+          createdAt: "Just now",
+          current: true,
+        },
+        ...promptVersions.map((version) => ({ ...version, current: false })),
+      ]
+    : promptVersions;
+
   return (
     <div className="rounded-xl border border-white/[.07] bg-[#161b22] p-5">
-      {promptVersions.map((version, index) => (
-        <div key={version.version} className="relative flex gap-4 pb-6 last:pb-0">
-          {index < promptVersions.length - 1 && <span className="absolute bottom-0 left-[15px] top-8 w-px bg-white/[.07]" />}
+      <div className="mb-5 flex items-center justify-between border-b border-white/[.06] pb-4">
+        <div>
+          <h2 className="text-xs font-semibold text-slate-200">Version history</h2>
+          <p className="mt-1 text-[9px] text-slate-700">Immutable snapshots of this prompt</p>
+        </div>
+        <Button
+          size="sm"
+          onClick={onCreateVersion}
+          className="bg-emerald-500 text-[#07120b] shadow-[0_8px_20px_rgba(34,197,94,.14)] hover:bg-emerald-400"
+        >
+          <GitBranchPlus className="size-3.5" /> Create version
+        </Button>
+      </div>
+      {versions.map((version, index) => (
+        <div
+          key={version.version}
+          className={cn(
+            "relative -mx-2 flex gap-4 rounded-lg px-2 pb-6 last:pb-2",
+            newVersionCreated && index === 0 && "mb-3 bg-emerald-500/[.045] pt-2 ring-1 ring-emerald-500/15",
+          )}
+        >
+          {index < versions.length - 1 && <span className="absolute bottom-0 left-[23px] top-8 w-px bg-white/[.07]" />}
           <span className={cn("relative grid size-8 shrink-0 place-items-center rounded-full border text-[10px] font-semibold", version.current ? "border-violet-500/35 bg-violet-500/10 text-violet-300" : "border-white/[.08] bg-[#0d1117] text-slate-600")}>
             {version.current ? <CheckCircle2 className="size-3.5" /> : version.version}
           </span>

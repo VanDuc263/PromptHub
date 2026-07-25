@@ -167,7 +167,8 @@ export function AppSidebar({
                   currentPage === item.label ||
                   (item.label === "My prompts" &&
                     (currentPage === "Create prompt" ||
-                      currentPage === "Prompt detail"))
+                      currentPage === "Prompt detail" ||
+                      currentPage === "Create version"))
                 }
                 collapsed={collapsed}
                 onClick={() => onNavigate(item.label)}

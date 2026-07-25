@@ -106,3 +106,16 @@ export interface PromptDetailActivity {
   time: string;
   tone: string;
 }
+
+export interface VersionChangeMetric {
+  label: string;
+  value: string;
+  tone: "positive" | "negative" | "neutral";
+}
+
+export interface VariableChange {
+  name: string;
+  type: "Added" | "Removed" | "Modified";
+  oldValue?: string;
+  newValue?: string;
+}
