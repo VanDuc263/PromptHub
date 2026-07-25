@@ -4,6 +4,7 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { App } from "@/App";
 import { SavedPromptsProvider } from "@/context/saved-prompts-provider";
 import { CollectionsProvider } from "@/context/collections-provider";
+import { HistoryProvider } from "@/context/history-provider";
 import "@/styles/globals.css";
 
 createRoot(document.getElementById("root")!).render(
@@ -11,7 +12,9 @@ createRoot(document.getElementById("root")!).render(
     <TooltipProvider delayDuration={200}>
       <SavedPromptsProvider>
         <CollectionsProvider>
-          <App />
+          <HistoryProvider>
+            <App />
+          </HistoryProvider>
         </CollectionsProvider>
       </SavedPromptsProvider>
     </TooltipProvider>

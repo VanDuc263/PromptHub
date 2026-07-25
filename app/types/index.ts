@@ -312,3 +312,46 @@ export interface PromptCollection {
   allowFollowers: boolean;
   following?: boolean;
 }
+
+export type HistoryActivityType =
+  | "Viewed"
+  | "Copied"
+  | "Run"
+  | "Created"
+  | "Edited"
+  | "Created Version"
+  | "Forked"
+  | "Saved"
+  | "Removed from Saved"
+  | "Added to Collection"
+  | "Removed from Collection"
+  | "Created Collection"
+  | "Updated Collection"
+  | "Deleted"
+  | "Restored";
+
+export interface HistoryRecord {
+  id: string;
+  type: HistoryActivityType;
+  title: string;
+  description: string;
+  contentType: "Prompt" | "Collection" | "Profile" | "Community Prompt";
+  source: "My Prompts" | "Explore" | "Saved" | "Collections" | "Public Prompt Detail" | "User Profile";
+  group: "Today" | "Yesterday" | "This Week" | "Earlier";
+  timestamp: string;
+  createdAt: number;
+  category?: string;
+  author?: string;
+  model?: string;
+  version?: string;
+  metadata?: string;
+  collection?: string;
+  run?: {
+    status: "Completed" | "Failed";
+    tokens: number;
+    runtime: string;
+    variables: string;
+  };
+  trashDays?: number;
+  permanentlyDeleted?: boolean;
+}

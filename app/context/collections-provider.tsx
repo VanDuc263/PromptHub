@@ -9,7 +9,21 @@ export function CollectionsProvider({ children }: { children: ReactNode }) {
   const [collections, setCollections] = useState<PromptCollection[]>(() => {
     try {
       const stored = window.localStorage.getItem(storageKey);
-      return stored ? (JSON.parse(stored) as PromptCollection[]) : initialCollections;
+      if (!stored) return initialCollections;
+      const parsed = JSON.parse(stored) as PromptCollection[];
+      return parsed.map((collection) => {
+        const currentMock = initialCollections.find((item) => item.id === collection.id);
+        return currentMock
+          ? {
+              ...collection,
+              name: currentMock.name,
+              description: currentMock.description,
+              tags: currentMock.tags,
+              followers: currentMock.followers,
+              views: currentMock.views,
+            }
+          : collection;
+      });
     } catch {
       return initialCollections;
     }

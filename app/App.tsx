@@ -11,6 +11,7 @@ import { CreatePromptPage } from "@/pages/create-prompt-page";
 import { PromptDetailPage } from "@/pages/prompt-detail-page";
 import type { DetailTabId } from "@/components/prompt-detail/detail-tabs";
 import { AddToCollectionDialog } from "@/components/collections/collection-dialogs";
+import { useHistory } from "@/hooks/use-history";
 
 const CreateVersionPage = lazy(() =>
   import("@/pages/create-version-page").then((module) => ({
@@ -54,18 +55,28 @@ const CollectionsPage = lazy(() =>
   })),
 );
 
+const HistoryPage = lazy(() =>
+  import("@/pages/history-page").then((module) => ({
+    default: module.HistoryPage,
+  })),
+);
+
 export function App() {
+  const { recordAction } = useHistory();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState("Home");
+  const [currentPage, setCurrentPage] = useState(() =>
+    window.location.pathname === "/history" ? "History" : "Home",
+  );
   const [detailInitialTab, setDetailInitialTab] = useState<DetailTabId>("overview");
   const [newVersionCreated, setNewVersionCreated] = useState(false);
   const [compareOldVersion, setCompareOldVersion] = useState("v2");
   const [collectionPrompt, setCollectionPrompt] = useState<string | null>(null);
 
   const handleAction = useCallback((label: string) => {
+    recordAction(label);
     if (label === "New prompt created" || label === "Create prompt opened") {
       setCurrentPage("Create prompt");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -122,7 +133,7 @@ export function App() {
       return;
     }
     setToast(label);
-  }, []);
+  }, [recordAction]);
 
   useEffect(() => {
     if (!toast) return;
@@ -141,6 +152,10 @@ export function App() {
               : "prompthub:focus-collections-search",
         ),
       );
+      return;
+    }
+    if (currentPage === "History") {
+      window.dispatchEvent(new Event("prompthub:focus-history-search"));
       return;
     }
     setSearchOpen(true);
@@ -162,9 +177,11 @@ export function App() {
             label === "My prompts" ||
             label === "Explore" ||
             label === "Saved" ||
-            label === "Collections"
+            label === "Collections" ||
+            label === "History"
           ) {
             setCurrentPage(label);
+            if (label === "History") window.history.pushState({}, "", "/history");
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
           }
@@ -183,7 +200,15 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "Collections" ? (
+        {currentPage === "History" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <HistoryPage
+              onExplore={() => setCurrentPage("Explore")}
+              onDashboard={() => setCurrentPage("Home")}
+              onAction={handleAction}
+            />
+          </Suspense>
+        ) : currentPage === "Collections" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <CollectionsPage onAction={handleAction} />
           </Suspense>
