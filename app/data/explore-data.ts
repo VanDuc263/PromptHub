@@ -41,6 +41,28 @@ export const defaultExploreFilters = {
 
 export const communityPrompts: ExplorePrompt[] = [
   {
+    id: 13,
+    title: "Spring Boot API Generator",
+    description: "Generate production-ready Spring Boot REST APIs with validation, persistence, testing, and clear documentation.",
+    category: "Programming",
+    tags: ["Spring Boot", "Java", "REST API"],
+    models: ["GPT-5", "Claude", "Gemini", "DeepSeek"],
+    author: "Đức Nguyễn",
+    authorInitials: "ĐN",
+    createdAt: "Today",
+    copies: 3240,
+    likes: 846,
+    bookmarks: 572,
+    rating: 4.8,
+    tokens: 1860,
+    visibility: "Public",
+    snippet: "You are a senior Spring Boot architect. Generate a production-ready {{api_type}} API for {{domain}} using...",
+    variables: ["domain", "api_type", "database", "language", "tone"],
+    icon: Code2,
+    accent: "text-emerald-300 bg-emerald-500/10",
+    featured: true,
+  },
+  {
     id: 1,
     title: "Senior Code Reviewer",
     description: "Perform production-grade reviews across architecture, security, performance, and maintainability.",

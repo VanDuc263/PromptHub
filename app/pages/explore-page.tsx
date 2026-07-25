@@ -97,6 +97,10 @@ export function ExplorePage({
   };
 
   const openPrompt = (prompt: ExplorePrompt) => {
+    if (prompt.title === "Spring Boot API Generator") {
+      onAction("Opened public prompt detail");
+      return;
+    }
     onAction(`Community prompt opened: ${prompt.title}`);
   };
 

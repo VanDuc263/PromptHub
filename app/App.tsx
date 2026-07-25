@@ -29,6 +29,12 @@ const ExplorePage = lazy(() =>
   })),
 );
 
+const PublicPromptDetailPage = lazy(() =>
+  import("@/pages/public-prompt-detail-page").then((module) => ({
+    default: module.PublicPromptDetailPage,
+  })),
+);
+
 export function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -53,6 +59,11 @@ export function App() {
     }
     if (label === "Explore opened") {
       setCurrentPage("Explore");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (label === "Opened public prompt detail") {
+      setCurrentPage("Public prompt detail");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -104,7 +115,14 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "Explore" ? (
+        {currentPage === "Public prompt detail" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <PublicPromptDetailPage
+              onBack={() => setCurrentPage("Explore")}
+              onAction={handleAction}
+            />
+          </Suspense>
+        ) : currentPage === "Explore" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <ExplorePage onAction={handleAction} />
           </Suspense>

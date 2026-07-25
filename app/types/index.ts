@@ -171,3 +171,37 @@ export interface CommunityCreator {
   saves: number;
   tone: string;
 }
+
+export interface PublicPromptVariable {
+  name: string;
+  description: string;
+  defaultValue: string;
+  required: boolean;
+  example: string;
+}
+
+export interface PublicPromptExample {
+  id: number;
+  title: string;
+  input: string;
+  output: string;
+}
+
+export interface PublicPromptVersion {
+  version: string;
+  note: string;
+  date: string;
+  current?: boolean;
+}
+
+export interface CommunityComment {
+  id: number;
+  author: string;
+  initials: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  replies: number;
+  likes: number;
+  tone: string;
+}
