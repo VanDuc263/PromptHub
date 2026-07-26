@@ -93,6 +93,88 @@
     color: #64748b;
   }
 
+  .notification-popover {
+    z-index: 95;
+    display: flex;
+    width: 420px;
+    max-height: min(650px, calc(100vh - 92px));
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #2a2f3a;
+    border-radius: 1rem;
+    background: rgb(23 28 36 / 0.94);
+    box-shadow: 0 28px 90px rgb(0 0 0 / 0.58), 0 0 0 1px rgb(139 92 246 / 0.025);
+    backdrop-filter: blur(24px);
+    transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+    animation: notification-popover-in 180ms cubic-bezier(.16, 1, .3, 1);
+  }
+
+  .notification-scroll {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .notification-card {
+    border-left-width: 2px;
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease,
+      opacity 180ms ease;
+  }
+
+  .notification-card:hover,
+  .notification-card:focus-visible {
+    z-index: 1;
+    transform: translateY(-2px);
+    border-color: rgb(139 92 246 / 0.32);
+    background: rgb(255 255 255 / 0.075);
+    box-shadow: 0 10px 28px rgb(0 0 0 / 0.25), 0 0 18px rgb(139 92 246 / 0.08);
+  }
+
+  .notification-card:focus-visible {
+    box-shadow: 0 0 0 2px rgb(139 92 246 / 0.72), 0 10px 28px rgb(0 0 0 / 0.25);
+  }
+
+  .notification-actions {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: max-height 180ms ease, opacity 180ms ease, transform 180ms ease;
+  }
+
+  .notification-card:hover .notification-actions,
+  .notification-card:focus-within .notification-actions {
+    max-height: 2rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .notification-more {
+    opacity: 0;
+  }
+
+  .notification-card:hover .notification-more,
+  .notification-card:focus-within .notification-more {
+    opacity: 1;
+  }
+
+  .notification-unread-dot {
+    box-shadow: 0 0 0 0 rgb(167 139 250 / 0.4);
+    animation: notification-dot-pulse 2.2s ease-out infinite;
+  }
+
+  .notification-backdrop {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 94;
+  }
+
   .form-input {
     height: 2.5rem;
     width: 100%;
@@ -125,6 +207,94 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+@keyframes notification-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes notification-dot-pulse {
+  65%,
+  100% {
+    box-shadow: 0 0 0 5px rgb(167 139 250 / 0);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .notification-popover {
+    width: calc(100vw - 24px);
+  }
+}
+
+@media (max-width: 767px) {
+  div[data-radix-popper-content-wrapper]:has(> .notification-popover) {
+    inset: 0 !important;
+    min-width: 0 !important;
+    transform: none !important;
+  }
+
+  .notification-backdrop {
+    pointer-events: auto;
+    background: rgb(0 0 0 / 0.52);
+    backdrop-filter: blur(2px);
+    animation: notification-backdrop-in 180ms ease-out;
+  }
+
+  .notification-popover {
+    position: fixed !important;
+    inset: auto 0 0 !important;
+    width: 100vw;
+    max-width: none;
+    max-height: calc(100dvh - 12px);
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 1.25rem 1.25rem 0 0;
+    animation: notification-sheet-in 240ms cubic-bezier(.16, 1, .3, 1);
+  }
+
+  .notification-popover::before {
+    content: "";
+    width: 2.5rem;
+    height: 0.25rem;
+    margin: 0.5rem auto 0;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: rgb(148 163 184 / 0.28);
+  }
+
+  .notification-actions {
+    max-height: 2rem;
+    opacity: 1;
+    transform: none;
+  }
+
+  .notification-more {
+    opacity: 1;
+  }
+}
+
+@keyframes notification-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notification-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,5 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
-  Bell,
   ChevronDown,
   Compass,
   LogOut,
@@ -11,6 +10,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/layout/search-bar";
+import { NotificationButton } from "@/components/layout/notification-popover";
 import { cn } from "@/lib/utils";
 
 interface TopNavbarProps {
@@ -18,41 +18,6 @@ interface TopNavbarProps {
   onMenu: () => void;
   onSearch: () => void;
   onAction: (label: string) => void;
-}
-
-function NotificationButton({ onAction }: { onAction: (label: string) => void }) {
-  return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button variant="icon" size="icon" className="relative" aria-label="Notifications">
-          <Bell className="size-[18px]" />
-          <span className="absolute right-2 top-2 size-1.5 rounded-full bg-violet-400 ring-2 ring-[#0d1117]" />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" sideOffset={9} className="dropdown-content w-80">
-          <div className="flex items-center justify-between border-b border-white/[.07] px-4 py-3">
-            <p className="text-sm font-semibold text-slate-100">Notifications</p>
-            <button className="text-[11px] text-violet-400 hover:text-violet-300" onClick={() => onAction("Notifications marked as read")}>Mark all read</button>
-          </div>
-          <button className="flex w-full gap-3 px-4 py-3 text-left hover:bg-white/[.04]" onClick={() => onAction("Opened comment")}>
-            <span className="mt-1 size-2 shrink-0 rounded-full bg-violet-400" />
-            <span>
-              <span className="block text-xs leading-5 text-slate-300">Minh commented on <strong className="font-medium text-slate-100">SQL Query Optimizer</strong></span>
-              <span className="mt-1 block text-[11px] text-slate-600">5 hours ago</span>
-            </span>
-          </button>
-          <button className="flex w-full gap-3 px-4 py-3 text-left hover:bg-white/[.04]" onClick={() => onAction("Opened trending prompt")}>
-            <span className="mt-1 size-2 shrink-0 rounded-full bg-sky-400" />
-            <span>
-              <span className="block text-xs leading-5 text-slate-300">Your prompt is trending in <strong className="font-medium text-slate-100">Programming</strong></span>
-              <span className="mt-1 block text-[11px] text-slate-600">Yesterday</span>
-            </span>
-          </button>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
-  );
 }
 
 function UserDropdown({ onAction }: { onAction: (label: string) => void }) {
