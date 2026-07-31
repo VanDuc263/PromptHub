@@ -1,4 +1,4 @@
-import { Compass, SearchX, Sparkles } from "lucide-react";
+import { AlertTriangle, Compass, RefreshCw, SearchX, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CopyPromptDialog } from "@/components/explore/copy-prompt-dialog";
@@ -17,8 +17,10 @@ import {
 } from "@/components/explore/marketplace-card";
 import { TrendingCarousel } from "@/components/explore/trending-carousel";
 import { Button } from "@/components/ui/button";
-import { communityPrompts, defaultExploreFilters } from "@/data/explore-data";
+import { apiPromptToExplorePrompt, defaultExploreFilters } from "@/data/explore-data";
 import type { ExplorePrompt } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchExplorePrompts } from "@/store/explore-slice";
 
 export function ExplorePage({
   onAction,
@@ -28,16 +30,24 @@ export function ExplorePage({
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<ExploreFilters>(defaultExploreFilters);
   const [visibleCount, setVisibleCount] = useState(6);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<ExplorePrompt | null>(null);
   const [copyOpen, setCopyOpen] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const requestedRef = useRef(false);
+  const dispatch = useAppDispatch();
+  const { prompts: apiPrompts, status, error } = useAppSelector((state) => state.explore);
+  const communityPrompts = useMemo(
+    () => apiPrompts.map(apiPromptToExplorePrompt),
+    [apiPrompts],
+  );
+  const initialLoading = status === "idle" || status === "loading";
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => setInitialLoading(false), 650);
-    return () => window.clearTimeout(timeout);
-  }, []);
+    if (status !== "idle" || requestedRef.current) return;
+    requestedRef.current = true;
+    void dispatch(fetchExplorePrompts());
+  }, [dispatch, status]);
 
   const filteredPrompts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -61,7 +71,7 @@ export function ExplorePage({
       if (filters.sort === "Most Saved") return b.saves - a.saves;
       return b.copies + b.likes - (a.copies + a.likes);
     });
-  }, [filters, query]);
+  }, [communityPrompts, filters, query]);
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -109,7 +119,10 @@ export function ExplorePage({
       <div className="mx-auto max-w-[1800px] px-4 py-6 sm:px-6 sm:py-8 xl:px-8">
         <ExploreHeader query={query} onQueryChange={updateQuery} />
         <div className="mt-6"><FilterBar filters={filters} onChange={updateFilters} /></div>
-        <div className="mt-8"><TrendingCarousel onOpen={(id) => openPrompt(communityPrompts.find((prompt) => prompt.id === id)!)} /></div>
+        <div className="mt-8"><TrendingCarousel prompts={communityPrompts} onOpen={(id) => {
+          const prompt = communityPrompts.find((item) => item.id === id);
+          if (prompt) openPrompt(prompt);
+        }} /></div>
 
         <div className="mt-9 grid min-w-0 gap-5 lg:grid-cols-[180px_minmax(0,1fr)] 2xl:grid-cols-[180px_minmax(0,1fr)_260px]">
           <ExploreLeftSidebar
@@ -135,6 +148,11 @@ export function ExplorePage({
               <div className="columns-1 gap-3 xl:columns-2 2xl:columns-2 min-[1700px]:columns-3">
                 {Array.from({ length: 6 }, (_, index) => <MarketplaceCardSkeleton key={index} />)}
               </div>
+            ) : status === "failed" ? (
+              <ExploreErrorState
+                message={error ?? "Could not load community prompts."}
+                onRetry={() => void dispatch(fetchExplorePrompts())}
+              />
             ) : filteredPrompts.length === 0 ? (
               <ExploreEmptyState
                 onReset={() => {
@@ -187,6 +205,19 @@ export function ExplorePage({
         onAction={onAction}
       />
     </>
+  );
+}
+
+function ExploreErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div role="alert" className="rounded-2xl border border-amber-500/15 bg-amber-500/[.04] px-6 py-14 text-center">
+      <AlertTriangle className="mx-auto size-8 text-amber-400/80" />
+      <h3 className="mt-4 text-base font-semibold text-slate-200">Unable to load prompts</h3>
+      <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{message}</p>
+      <Button variant="secondary" className="mt-6" onClick={onRetry}>
+        <RefreshCw className="size-4" /> Try again
+      </Button>
+    </div>
   );
 }
 

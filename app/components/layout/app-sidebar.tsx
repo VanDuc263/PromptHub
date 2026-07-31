@@ -196,6 +196,7 @@ export function AppSidebar({
                 onClick={() => onNavigate(workspace.label)}
                 className={cn(
                   "flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-slate-400 transition-colors hover:bg-white/[.045] hover:text-slate-200",
+                  currentPage === "Workspace Management" && workspace.label === "Personal" && "bg-violet-500/10 text-violet-300",
                   collapsed && "justify-center px-0",
                 )}
               >

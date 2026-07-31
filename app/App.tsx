@@ -12,6 +12,10 @@ import { PromptDetailPage } from "@/pages/prompt-detail-page";
 import type { DetailTabId } from "@/components/prompt-detail/detail-tabs";
 import { AddToCollectionDialog } from "@/components/collections/collection-dialogs";
 import { useHistory } from "@/hooks/use-history";
+import { LoginPage } from "@/pages/login-page";
+import { RegisterPage } from "@/pages/register-page";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { clearAuthError, logoutUser } from "@/store/auth-slice";
 
 const CreateVersionPage = lazy(() =>
   import("@/pages/create-version-page").then((module) => ({
@@ -61,8 +65,17 @@ const HistoryPage = lazy(() =>
   })),
 );
 
+const WorkspaceManagementPage = lazy(() =>
+  import("@/pages/workspace-management-page").then((module) => ({
+    default: module.WorkspaceManagementPage,
+  })),
+);
+
 export function App() {
   const { recordAction } = useHistory();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+  const [pathname, setPathname] = useState(() => window.location.pathname);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -74,8 +87,39 @@ export function App() {
   const [newVersionCreated, setNewVersionCreated] = useState(false);
   const [compareOldVersion, setCompareOldVersion] = useState("v2");
   const [collectionPrompt, setCollectionPrompt] = useState<string | null>(null);
+  const [workspaceInitialId, setWorkspaceInitialId] = useState("personal");
 
   const handleAction = useCallback((label: string) => {
+    if (label === "Sign in selected" || label === "Create account selected") {
+      const path = label === "Sign in selected" ? "/login" : "/register";
+      window.history.pushState({}, "", path);
+      setPathname(path);
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    if (
+      !user &&
+      [
+        "New prompt created",
+        "Create prompt opened",
+        "Saved opened",
+        "Collections opened",
+        "Collection picker opened",
+        "Profile opened",
+      ].some((action) => label === action || label.startsWith("Add "))
+    ) {
+      window.history.pushState({}, "", "/login");
+      setPathname("/login");
+      return;
+    }
+    if (label === "Sign out selected") {
+      void dispatch(logoutUser()).then(() => {
+        window.history.replaceState({}, "", "/login");
+        setPathname("/login");
+        setCurrentPage("Home");
+      });
+      return;
+    }
     if (label === "New prompt created" || label === "Create prompt opened") {
       if (label === "New prompt created") recordAction(label);
       setCurrentPage("Create prompt");
@@ -137,7 +181,7 @@ export function App() {
     }
     recordAction(label);
     setToast(label);
-  }, [recordAction]);
+  }, [dispatch, recordAction, user]);
 
   useEffect(() => {
     if (!toast) return;
@@ -166,6 +210,29 @@ export function App() {
   }, [currentPage]);
   useKeyboardShortcut("k", openSearch, { ctrlOrMeta: true });
 
+  useEffect(() => {
+    const handlePopState = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const navigate = useCallback((path: string) => {
+    dispatch(clearAuthError());
+    window.history.pushState({}, "", path);
+    setPathname(path);
+    if (path === "/") setCurrentPage("Home");
+    window.scrollTo({ top: 0 });
+  }, [dispatch]);
+
+  if (pathname === "/login") return <LoginPage onNavigate={navigate} />;
+  if (pathname === "/register") return <RegisterPage onNavigate={navigate} />;
+  if (
+    !user &&
+    !["Home", "Explore", "Public prompt detail", "User profile public"].includes(currentPage)
+  ) {
+    return <LoginPage onNavigate={navigate} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#0d1117] text-slate-200">
       <AppSidebar
@@ -176,6 +243,10 @@ export function App() {
         onMobileClose={() => setMobileOpen(false)}
         onNavigate={(label) => {
           setMobileOpen(false);
+          if (!user && label !== "Home" && label !== "Explore") {
+            handleAction("Sign in selected");
+            return;
+          }
           if (
             label === "Home" ||
             label === "My prompts" ||
@@ -189,11 +260,18 @@ export function App() {
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
           }
+          if (label === "Personal" || label === "Backend Team" || label === "Create workspace") {
+            setWorkspaceInitialId(label === "Backend Team" ? "backend" : "personal");
+            setCurrentPage("Workspace Management");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
           handleAction(`${label} opened`);
         }}
       />
       <TopNavbar
         collapsed={sidebarCollapsed}
+        user={user}
         onMenu={() => setMobileOpen(true)}
         onSearch={openSearch}
         onAction={handleAction}
@@ -204,7 +282,15 @@ export function App() {
           sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
         )}
       >
-        {currentPage === "History" ? (
+        {currentPage === "Workspace Management" ? (
+          <Suspense fallback={<VersionPageSkeleton />}>
+            <WorkspaceManagementPage
+              key={workspaceInitialId}
+              initialWorkspaceId={workspaceInitialId}
+              onAction={handleAction}
+            />
+          </Suspense>
+        ) : currentPage === "History" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <HistoryPage
               onExplore={() => {

@@ -4,15 +4,17 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PromptCover } from "@/components/explore/prompt-cover";
-import { communityPrompts } from "@/data/explore-data";
 import { savedKeyForTitle } from "@/data/saved-data";
 import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import { formatCompact } from "@/lib/utils";
+import type { ExplorePrompt } from "@/types";
 
 export function TrendingCarousel({
   onOpen,
+  prompts,
 }: {
-  onOpen: (promptId: number) => void;
+  onOpen: (promptId: string | number) => void;
+  prompts: ExplorePrompt[];
 }) {
   return (
     <section>
@@ -24,7 +26,7 @@ export function TrendingCarousel({
         <p className="text-[10px] text-slate-700">Scroll to explore →</p>
       </div>
       <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
-        {communityPrompts.filter((prompt) => prompt.featured).map((prompt, index) => (
+        {prompts.filter((prompt) => prompt.featured).map((prompt, index) => (
           <FeaturedPromptCard key={prompt.id} prompt={prompt} index={index} onOpen={() => onOpen(prompt.id)} />
         ))}
       </div>
@@ -37,7 +39,7 @@ function FeaturedPromptCard({
   index,
   onOpen,
 }: {
-  prompt: (typeof communityPrompts)[number];
+  prompt: ExplorePrompt;
   index: number;
   onOpen: () => void;
 }) {

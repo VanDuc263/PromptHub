@@ -13,6 +13,40 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { CommunityCreator, ExplorePrompt } from "@/types";
+import type { ExplorePromptApi } from "@/lib/explore-api";
+
+const categoryPresentation: Record<string, Pick<ExplorePrompt, "icon" | "accent">> = {
+  Programming: { icon: Code2, accent: "text-emerald-300 bg-emerald-500/10" },
+  "Code Review": { icon: SearchCheck, accent: "text-violet-300 bg-violet-500/10" },
+  Writing: { icon: PenLine, accent: "text-amber-300 bg-amber-500/10" },
+  Marketing: { icon: Megaphone, accent: "text-rose-300 bg-rose-500/10" },
+  Education: { icon: GraduationCap, accent: "text-cyan-300 bg-cyan-500/10" },
+  Business: { icon: BriefcaseBusiness, accent: "text-orange-300 bg-orange-500/10" },
+  Productivity: { icon: ChartNoAxesCombined, accent: "text-sky-300 bg-sky-500/10" },
+  "Image Generation": { icon: Image, accent: "text-fuchsia-300 bg-fuchsia-500/10" },
+  "Prompt Engineering": { icon: Sparkles, accent: "text-violet-300 bg-violet-500/10" },
+};
+
+function relativeDate(value: string | null) {
+  if (!value) return "Recently";
+  const elapsedDays = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000));
+  if (elapsedDays === 0) return "Today";
+  if (elapsedDays === 1) return "Yesterday";
+  if (elapsedDays < 7) return `${elapsedDays} days ago`;
+  if (elapsedDays < 14) return "1 week ago";
+  return `${Math.floor(elapsedDays / 7)} weeks ago`;
+}
+
+export function apiPromptToExplorePrompt(prompt: ExplorePromptApi): ExplorePrompt {
+  const presentation = categoryPresentation[prompt.category] ?? categoryPresentation["Prompt Engineering"];
+  return {
+    ...prompt,
+    createdAt: relativeDate(prompt.publishedAt),
+    rating: prompt.rating || 0,
+    icon: presentation.icon,
+    accent: presentation.accent,
+  };
+}
 
 export const exploreCategories = [
   "All",

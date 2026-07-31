@@ -1,16 +1,20 @@
-import { Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="relative grid size-8 place-items-center rounded-lg bg-violet-500 text-white shadow-[0_0_22px_rgba(139,92,246,.2)]">
-        <Sparkles className="size-4" strokeWidth={2.2} />
-      </span>
-      {!compact && (
-        <span className="text-[15px] font-semibold tracking-[-0.02em] text-slate-50">
-          Prompt<span className="text-violet-400">Hub</span>
-        </span>
-      )}
+      <span
+        className={cn(
+          "h-8 shrink-0 rounded-lg bg-no-repeat",
+          compact ? "w-8" : "w-[138px]",
+        )}
+        style={{
+          backgroundImage: "url('/promptLogo.png')",
+          backgroundPosition: compact ? "-14.5px -19px" : "-10.3px -19px",
+          backgroundSize: "155.7px 71.3px",
+        }}
+        aria-hidden="true"
+      />
     </div>
   );
 }

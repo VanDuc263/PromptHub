@@ -12,22 +12,30 @@ import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/layout/search-bar";
 import { NotificationButton } from "@/components/layout/notification-popover";
 import { cn } from "@/lib/utils";
+import type { AuthUser } from "@/lib/auth-api";
 
 interface TopNavbarProps {
   collapsed: boolean;
   onMenu: () => void;
   onSearch: () => void;
   onAction: (label: string) => void;
+  user: AuthUser | null;
 }
 
-function UserDropdown({ onAction }: { onAction: (label: string) => void }) {
+function initialsFor(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+}
+
+function UserDropdown({ onAction, user }: { onAction: (label: string) => void; user: AuthUser | null }) {
+  const displayName = user?.displayName ?? "PromptHub User";
+  const email = user?.email ?? "user@prompthub.com";
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <button type="button" className="flex items-center gap-2 rounded-lg p-1 outline-none transition hover:bg-white/[.05] focus-visible:ring-2 focus-visible:ring-violet-500/60">
-          <Avatar initials="VD" />
+          <Avatar initials={initialsFor(displayName) || "PH"} />
           <div className="hidden text-left xl:block">
-            <p className="text-xs font-medium text-slate-200">Van Duc</p>
+            <p className="text-xs font-medium text-slate-200">{displayName}</p>
             <p className="text-[10px] text-slate-600">Personal</p>
           </div>
           <ChevronDown className="hidden size-3.5 text-slate-600 xl:block" />
@@ -36,8 +44,8 @@ function UserDropdown({ onAction }: { onAction: (label: string) => void }) {
       <DropdownMenu.Portal>
         <DropdownMenu.Content align="end" sideOffset={8} className="dropdown-content w-56 p-1.5">
           <div className="px-2.5 py-2">
-            <p className="text-xs font-medium text-slate-100">Van Duc</p>
-            <p className="mt-0.5 text-[11px] text-slate-500">vanduc@example.com</p>
+            <p className="text-xs font-medium text-slate-100">{displayName}</p>
+            <p className="mt-0.5 text-[11px] text-slate-500">{email}</p>
           </div>
           <DropdownMenu.Separator className="my-1 h-px bg-white/[.07]" />
           <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction("Profile opened")}><UserRound /> Profile</DropdownMenu.Item>
@@ -50,7 +58,7 @@ function UserDropdown({ onAction }: { onAction: (label: string) => void }) {
   );
 }
 
-export function TopNavbar({ collapsed, onMenu, onSearch, onAction }: TopNavbarProps) {
+export function TopNavbar({ collapsed, onMenu, onSearch, onAction, user }: TopNavbarProps) {
   return (
     <header
       className={cn(
@@ -72,7 +80,14 @@ export function TopNavbar({ collapsed, onMenu, onSearch, onAction }: TopNavbarPr
         </Button>
         <NotificationButton onAction={onAction} />
         <div className="mx-0.5 hidden h-6 w-px bg-white/[.07] sm:block" />
-        <UserDropdown onAction={onAction} />
+        {user ? (
+          <UserDropdown onAction={onAction} user={user} />
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" className="hidden sm:inline-flex" onClick={() => onAction("Sign in selected")}>Sign in</Button>
+            <Button size="sm" onClick={() => onAction("Create account selected")}>Create account</Button>
+          </div>
+        )}
       </div>
     </header>
   );
