@@ -30,6 +30,10 @@ export function MemberTable({
   onInvite,
   onAction,
   onCancelInvitation,
+  loading = false,
+  error,
+  canInvite = false,
+  readOnly = true,
 }: {
   members: WorkspaceMember[];
   invitations: PendingInvitation[];
@@ -40,6 +44,10 @@ export function MemberTable({
   onInvite: () => void;
   onAction: (label: string) => void;
   onCancelInvitation: (id: string) => void;
+  loading?: boolean;
+  error?: string | null;
+  canInvite?: boolean;
+  readOnly?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -55,11 +63,14 @@ export function MemberTable({
           <option>Editor</option>
           <option>Viewer</option>
         </select>
-        <Button onClick={onInvite}><UserPlus className="size-4" /> Invite Member</Button>
+        {canInvite && <Button onClick={onInvite}><UserPlus className="size-4" /> Invite Member</Button>}
       </div>
 
-      {!members.length ? (
-        <EmptyMembers onInvite={onInvite} />
+      {error && <p role="alert" className="rounded-lg border border-rose-400/20 bg-rose-500/[.06] px-4 py-3 text-xs text-rose-300">{error}</p>}
+      {loading ? (
+        <div aria-label="Loading members" className="overflow-hidden rounded-xl border border-white/[.07] bg-[#161b22]">{Array.from({ length: 4 }, (_, index) => <div key={index} className="flex items-center gap-3 border-b border-white/[.055] p-4 last:border-0"><span className="size-9 animate-pulse rounded-full bg-white/[.05]" /><span className="h-3 w-40 animate-pulse rounded bg-white/[.05]" /></div>)}</div>
+      ) : !members.length ? (
+        <EmptyMembers onInvite={onInvite} canInvite={canInvite} filtered={Boolean(query || role !== "All roles")} />
       ) : (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hidden overflow-hidden rounded-xl border border-white/[.07] bg-[#161b22] md:block">
@@ -70,7 +81,7 @@ export function MemberTable({
                   <th className="px-4 py-3 font-medium">Role</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Joined</th>
-                  <th className="w-12 px-4 py-3"><span className="sr-only">Actions</span></th>
+                  {!readOnly && <th className="w-12 px-4 py-3"><span className="sr-only">Actions</span></th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[.055]">
@@ -79,13 +90,13 @@ export function MemberTable({
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar initials={member.initials} />
-                        <div><p className="text-xs font-medium text-slate-200">{member.name}</p><p className="mt-0.5 text-[10px] text-slate-600">{member.email}</p></div>
+                        <div><p className="text-xs font-medium text-slate-200">{member.name}{member.currentUser && <span className="ml-1.5 text-[9px] font-normal text-violet-400">You</span>}</p><p className="mt-0.5 text-[10px] text-slate-600">{member.email}</p></div>
                       </div>
                     </td>
                     <td className="px-4 py-3"><Badge className={roleStyles[member.role]}>{member.role}</Badge></td>
-                    <td className="px-4 py-3"><Status status={member.status} /></td>
+                    <td className="px-4 py-3"><Status member={member} /></td>
                     <td className="px-4 py-3 text-[11px] text-slate-500">{member.joined}</td>
-                    <td className="px-4 py-3"><MemberActions member={member} onAction={onAction} /></td>
+                    {!readOnly && <td className="px-4 py-3"><MemberActions member={member} onAction={onAction} /></td>}
                   </tr>
                 ))}
               </tbody>
@@ -97,11 +108,11 @@ export function MemberTable({
               <article key={member.id} className="rounded-xl border border-white/[.07] bg-[#161b22] p-4">
                 <div className="flex items-start gap-3">
                   <Avatar initials={member.initials} />
-                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-medium text-slate-200">{member.name}</p><p className="mt-1 truncate text-[10px] text-slate-600">{member.email}</p></div>
-                  <MemberActions member={member} onAction={onAction} />
+                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-medium text-slate-200">{member.name}{member.currentUser && <span className="ml-1.5 text-[9px] font-normal text-violet-400">You</span>}</p><p className="mt-1 truncate text-[10px] text-slate-600">{member.email}</p></div>
+                  {!readOnly && <MemberActions member={member} onAction={onAction} />}
                 </div>
                 <div className="mt-4 flex items-center justify-between border-t border-white/[.06] pt-3">
-                  <div className="flex items-center gap-2"><Badge className={roleStyles[member.role]}>{member.role}</Badge><Status status={member.status} /></div>
+                  <div className="flex items-center gap-2"><Badge className={roleStyles[member.role]}>{member.role}</Badge><Status member={member} /></div>
                   <span className="text-[10px] text-slate-600">{member.joined}</span>
                 </div>
               </article>
@@ -110,7 +121,7 @@ export function MemberTable({
         </>
       )}
 
-      <section>
+      {canInvite && <section>
         <div className="mb-3 flex items-end justify-between">
           <div><h3 className="text-sm font-semibold text-slate-100">Pending Invitations</h3><p className="mt-1 text-xs text-slate-600">Invitations that have not been accepted yet.</p></div>
           <Badge>{invitations.length} pending</Badge>
@@ -125,13 +136,13 @@ export function MemberTable({
             </div>
           )) : <p className="px-4 py-8 text-center text-xs text-slate-600">No pending invitations.</p>}
         </div>
-      </section>
+      </section>}
     </div>
   );
 }
 
-function Status({ status }: { status: WorkspaceMember["status"] }) {
-  return <span className="inline-flex items-center gap-2 text-[11px] text-slate-500"><span className={cn("size-1.5 rounded-full", statusStyles[status])} />{status}</span>;
+function Status({ member }: { member: WorkspaceMember }) {
+  return <span className="inline-flex items-center gap-2 text-[11px] text-slate-500" title={member.lastActive ? `Last active ${member.lastActive}` : undefined}><span className={cn("size-1.5 rounded-full", statusStyles[member.status])} />{member.status}{member.lastActive && <span className="hidden text-[9px] text-slate-700 lg:inline">· {member.lastActive}</span>}</span>;
 }
 
 function MemberActions({ member, onAction }: { member: WorkspaceMember; onAction: (label: string) => void }) {
@@ -150,13 +161,13 @@ function MemberActions({ member, onAction }: { member: WorkspaceMember; onAction
   );
 }
 
-function EmptyMembers({ onInvite }: { onInvite: () => void }) {
+function EmptyMembers({ onInvite, canInvite, filtered }: { onInvite: () => void; canInvite: boolean; filtered: boolean }) {
   return (
     <div className="rounded-xl border border-dashed border-white/[.08] px-6 py-16 text-center">
       <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-violet-500/[.06]"><UserPlus className="size-6 text-violet-400/60" /></div>
-      <h3 className="mt-4 text-sm font-semibold text-slate-300">No members yet.</h3>
-      <p className="mt-1 text-xs text-slate-600">Invite your first collaborator to this workspace.</p>
-      <Button size="sm" className="mt-5" onClick={onInvite}><UserPlus className="size-4" /> Invite Member</Button>
+      <h3 className="mt-4 text-sm font-semibold text-slate-300">{filtered ? "No matching members" : "No members yet"}</h3>
+      <p className="mt-1 text-xs text-slate-600">{filtered ? "Try another search term or role." : "This workspace does not have any members."}</p>
+      {canInvite && <Button size="sm" className="mt-5" onClick={onInvite}><UserPlus className="size-4" /> Invite Member</Button>}
     </div>
   );
 }

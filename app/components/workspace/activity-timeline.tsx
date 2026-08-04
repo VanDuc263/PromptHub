@@ -64,6 +64,7 @@ export function ActivityTimeline({
                   {activity.action}{" "}
                   <span className="font-medium text-slate-300">{activity.target}</span>
                 </p>
+                {activity.detail && <p className="mt-0.5 text-[10px] font-medium text-violet-400/70">{activity.detail}</p>}
                 <p className="mt-0.5 text-[10px] text-slate-600">{activity.time}</p>
               </div>
               <button type="button" aria-label="Activity actions" className="self-start rounded-md p-1.5 text-slate-700 opacity-0 outline-none transition hover:bg-white/[.05] hover:text-slate-400 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-violet-500/70 group-hover:opacity-100">

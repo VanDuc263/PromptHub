@@ -32,7 +32,9 @@ import {
   profilePrompts,
   profileReviews,
 } from "@/data/profile-data";
+import type { CreatorProfileData } from "@/data/profile-data";
 import { cn } from "@/lib/utils";
+import type { ProfilePrompt } from "@/types";
 
 const tabs = [
   { id: "overview", label: "Overview", icon: UserRound },
@@ -47,10 +49,14 @@ type ProfileTab = (typeof tabs)[number]["id"];
 
 export function ProfileTabs({
   isOwner,
+  profile = creatorProfile,
+  prompts = profilePrompts,
   onEdit,
   onAction,
 }: {
   isOwner: boolean;
+  profile?: CreatorProfileData;
+  prompts?: ProfilePrompt[];
   onEdit: () => void;
   onAction: (label: string) => void;
 }) {
@@ -62,6 +68,7 @@ export function ProfileTabs({
         <div className="flex min-w-max">
           {tabs.map((tab) => {
             const Icon = tab.icon;
+            const count = tab.id === "prompts" ? prompts.length : tab.id === "collections" ? profileCollections.length : "count" in tab ? tab.count : undefined;
             return (
               <button
                 type="button"
@@ -73,7 +80,7 @@ export function ProfileTabs({
                 )}
               >
                 <Icon className="size-3.5" /> {tab.label}
-                {"count" in tab && tab.count && <span className="rounded bg-white/[.04] px-1.5 py-0.5 text-[8px] text-slate-700">{tab.count}</span>}
+                {count !== undefined && <span className="rounded bg-white/[.04] px-1.5 py-0.5 text-[8px] text-slate-700">{count}</span>}
                 {activeTab === tab.id && <motion.span layoutId="profile-tab" className="absolute inset-x-2 bottom-0 h-0.5 rounded-t bg-violet-400" />}
               </button>
             );
@@ -83,8 +90,8 @@ export function ProfileTabs({
 
       <AnimatePresence mode="wait">
         <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18 }} className="mt-6">
-          {activeTab === "overview" && <OverviewTab isOwner={isOwner} onEdit={onEdit} onAction={onAction} onViewAll={(tab) => setActiveTab(tab)} />}
-          {activeTab === "prompts" && <PromptsTab onAction={onAction} />}
+          {activeTab === "overview" && <OverviewTab isOwner={isOwner} prompts={prompts} onEdit={onEdit} onAction={onAction} onViewAll={(tab) => setActiveTab(tab)} />}
+          {activeTab === "prompts" && <PromptsTab profile={profile} prompts={prompts} onAction={onAction} />}
           {activeTab === "collections" && <CollectionsTab onAction={onAction} />}
           {activeTab === "activity" && <ActivityTab onAction={onAction} />}
           {activeTab === "reviews" && <ReviewsTab />}
@@ -97,11 +104,13 @@ export function ProfileTabs({
 
 function OverviewTab({
   isOwner,
+  prompts,
   onEdit,
   onAction,
   onViewAll,
 }: {
   isOwner: boolean;
+  prompts: ProfilePrompt[];
   onEdit: () => void;
   onAction: (label: string) => void;
   onViewAll: (tab: ProfileTab) => void;
@@ -111,7 +120,7 @@ function OverviewTab({
       <main className="min-w-0 space-y-9">
         <section>
           <SectionHeading title="Featured Prompts" subtitle="A selection of the creator’s most useful public prompts." action="View all prompts" onAction={() => onViewAll("prompts")} />
-          <div className="grid gap-3 2xl:grid-cols-3">{profilePrompts.filter((prompt) => prompt.featured).map((prompt) => <CreatorPromptCard key={prompt.id} prompt={prompt} onAction={onAction} />)}</div>
+          <div className="grid gap-3 2xl:grid-cols-3">{prompts.filter((prompt) => prompt.featured).map((prompt) => <CreatorPromptCard key={prompt.id} prompt={prompt} onAction={onAction} />)}</div>
         </section>
         <section>
           <SectionHeading title="Popular Collections" subtitle="Curated prompt sets for practical developer workflows." action="View all collections" onAction={() => onViewAll("collections")} />
@@ -131,7 +140,7 @@ function OverviewTab({
   );
 }
 
-function PromptsTab({ onAction }: { onAction: (label: string) => void }) {
+function PromptsTab({ profile, prompts: sourcePrompts, onAction }: { profile: CreatorProfileData; prompts: ProfilePrompt[]; onAction: (label: string) => void }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All categories");
   const [model, setModel] = useState("All models");
@@ -140,22 +149,22 @@ function PromptsTab({ onAction }: { onAction: (label: string) => void }) {
   const [visible, setVisible] = useState(4);
 
   const prompts = useMemo(() => {
-    const filtered = profilePrompts.filter((prompt) =>
+    const filtered = sourcePrompts.filter((prompt) =>
       (!query || `${prompt.title} ${prompt.description} ${prompt.tags.join(" ")}`.toLowerCase().includes(query.toLowerCase())) &&
       (category === "All categories" || prompt.category === category) &&
       (model === "All models" || prompt.models.includes(model)),
     );
-    return [...filtered].sort((a, b) => sort === "Most Copied" ? b.copies - a.copies : sort === "Highest Rated" ? b.rating - a.rating : sort === "Oldest" ? a.id - b.id : b.copies + b.likes - a.copies - a.likes);
-  }, [category, model, query, sort]);
+    return [...filtered].sort((a, b) => sort === "Most Copied" ? b.copies - a.copies : sort === "Highest Rated" ? b.rating - a.rating : sort === "Oldest" ? String(a.id).localeCompare(String(b.id)) : b.copies + b.likes - a.copies - a.likes);
+  }, [category, model, query, sort, sourcePrompts]);
 
   return (
     <div>
-      <SectionHeading title="Public Prompts" subtitle="All prompts published by Đức Nguyễn." />
+      <SectionHeading title="Public Prompts" subtitle={`All prompts published by ${profile.name}.`} />
       <div className="mb-5 flex flex-col gap-2 rounded-2xl border border-white/[.07] bg-[#161b22] p-3 lg:flex-row">
         <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-700" /><input value={query} onChange={(event) => { setQuery(event.target.value); setVisible(4); }} placeholder="Search prompts..." className="h-9 w-full rounded-lg border border-white/[.07] bg-[#0d1117] pl-9 pr-3 text-xs text-slate-200 outline-none focus:border-violet-500/40" /></div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <SelectField value={category} onChange={(event) => setCategory(event.target.value)} className="h-9"><option>All categories</option><option>Programming</option><option>Code Review</option><option>Education</option></SelectField>
-          <SelectField value={model} onChange={(event) => setModel(event.target.value)} className="h-9"><option>All models</option>{creatorProfile.preferredModels.map((item) => <option key={item}>{item}</option>)}</SelectField>
+          <SelectField value={model} onChange={(event) => setModel(event.target.value)} className="h-9"><option>All models</option>{profile.preferredModels.map((item) => <option key={item}>{item}</option>)}</SelectField>
           <SelectField value={sort} onChange={(event) => setSort(event.target.value)} className="h-9"><option>Most Popular</option><option>Most Copied</option><option>Highest Rated</option><option>Recently Updated</option><option>Oldest</option></SelectField>
         </div>
         <div className="flex rounded-lg border border-white/[.07] bg-[#0d1117] p-1"><button type="button" onClick={() => setLayout("grid")} aria-label="Grid view" className={cn("grid size-7 place-items-center rounded-md", layout === "grid" ? "bg-white/[.06] text-slate-300" : "text-slate-700")}><Grid2X2 className="size-3.5" /></button><button type="button" onClick={() => setLayout("list")} aria-label="List view" className={cn("grid size-7 place-items-center rounded-md", layout === "list" ? "bg-white/[.06] text-slate-300" : "text-slate-700")}><List className="size-3.5" /></button></div>

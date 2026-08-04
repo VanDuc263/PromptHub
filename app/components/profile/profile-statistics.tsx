@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { profileStats } from "@/data/profile-data";
 
-export function ProfileStatistics({ followerDelta = 0 }: { followerDelta?: number }) {
+export function ProfileStatistics({ followerDelta = 0, statistics = profileStats }: { followerDelta?: number; statistics?: typeof profileStats }) {
   return (
     <section className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-6">
-      {profileStats.map((stat, index) => {
+      {statistics.map((stat, index) => {
         const Icon = stat.icon;
         const value = stat.label === "Followers" && followerDelta ? "3.2K+" : stat.value;
         return (

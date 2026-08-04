@@ -95,7 +95,16 @@ export function loadSession(): StoredSession | null {
   const raw = localStorage.getItem(sessionKey) ?? sessionStorage.getItem(sessionKey);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as StoredSession;
+    const session = JSON.parse(raw) as StoredSession;
+    const payload = session.accessToken.split(".")[1];
+    if (!payload) throw new Error("Invalid access token");
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const claims = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="))) as { exp?: number };
+    if (!claims.exp || claims.exp * 1000 <= Date.now()) {
+      clearSession();
+      return null;
+    }
+    return session;
   } catch {
     clearSession();
     return null;

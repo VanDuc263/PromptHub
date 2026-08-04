@@ -26,10 +26,13 @@ const visibilityIcons = {
 export function PromptCard({
   prompt,
   onAction,
+  onOpen,
 }: {
   prompt: Prompt;
   onAction: (label: string) => void;
+  onOpen?: () => void;
 }) {
+  const openPrompt = onOpen ?? (() => onAction(`Opened ${prompt.title}`));
   const VisibilityIcon = visibilityIcons[prompt.visibility];
   return (
     <article className="card-hover group relative flex min-h-[236px] flex-col overflow-hidden rounded-xl border border-white/[.07] bg-[#161b22] p-5">
@@ -47,7 +50,7 @@ export function PromptCard({
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content align="end" sideOffset={6} className="dropdown-content w-44 p-1.5">
-              <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Opened ${prompt.title}`)}><ExternalLink /> Open prompt</DropdownMenu.Item>
+              <DropdownMenu.Item className="dropdown-item" onSelect={openPrompt}><ExternalLink /> Open prompt</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Copied ${prompt.title}`)}><Copy /> Copy</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Sharing ${prompt.title}`)}><Share2 /> Share</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Add ${prompt.title} to collection`)}><FolderPlus /> Add to Collection</DropdownMenu.Item>
@@ -73,7 +76,7 @@ export function PromptCard({
       </div>
 
       <div className="absolute inset-x-4 bottom-3 flex translate-y-3 items-center justify-end gap-1 rounded-lg border border-white/[.08] bg-[#1c2128]/95 p-1 opacity-0 shadow-xl backdrop-blur transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-        <Button variant="ghost" size="sm" onClick={() => onAction(`Opened ${prompt.title}`)}><ExternalLink className="size-3.5" /> Open</Button>
+        <Button variant="ghost" size="sm" onClick={openPrompt}><ExternalLink className="size-3.5" /> Open</Button>
         <Button variant="ghost" size="sm" onClick={() => onAction(`Copied ${prompt.title}`)}><Copy className="size-3.5" /> Copy</Button>
         <Button variant="ghost" size="sm" onClick={() => onAction(`Editing ${prompt.title}`)}><Pencil className="size-3.5" /> Edit</Button>
       </div>

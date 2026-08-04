@@ -16,6 +16,7 @@ import { promptActivities, promptStats, promptVersions } from "@/data/prompt-det
 import { cn } from "@/lib/utils";
 import { TemplateCard } from "@/components/prompt-detail/template-card";
 import { UsePromptWorkspace } from "@/components/prompt-detail/use-prompt-workspace";
+import { PromptComments, PromptReviews } from "@/components/prompt-detail/prompt-feedback-sections";
 
 const tabs = [
   { id: "overview", label: "Overview", icon: BookOpenText },
@@ -33,6 +34,7 @@ export function DetailTabs({
   onCreateVersion,
   onCompareVersion,
   newVersionCreated,
+  promptId,
 }: {
   activeTab: DetailTabId;
   onTabChange: (tab: DetailTabId) => void;
@@ -40,6 +42,7 @@ export function DetailTabs({
   onCreateVersion: () => void;
   onCompareVersion: (version: string) => void;
   newVersionCreated: boolean;
+  promptId: string | null;
 }) {
   return (
     <section>
@@ -78,6 +81,8 @@ export function DetailTabs({
                 Optimized for Java 17+ and Spring Boot projects. Recommendations prioritize correctness and maintainability before stylistic preferences.
               </InfoCard>
             </div>
+            {promptId && <PromptComments promptId={promptId} readOnly />}
+            {promptId && <PromptReviews promptId={promptId} />}
           </div>
         )}
         {activeTab === "versions" && (

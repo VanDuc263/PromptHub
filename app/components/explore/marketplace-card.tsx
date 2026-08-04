@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PromptCover } from "@/components/explore/prompt-cover";
 import { cn, formatCompact } from "@/lib/utils";
-import { savedKeyForTitle } from "@/data/saved-data";
 import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import type { ExplorePrompt } from "@/types";
 
@@ -31,7 +30,7 @@ export function MarketplaceCard({
   onAction: (label: string) => void;
 }) {
   const [liked, setLiked] = useState(false);
-  const savedId = savedKeyForTitle(prompt.title);
+  const savedId = String(prompt.id);
   const { isSaved, toggleSaved } = useSavedPrompts();
   const bookmarked = isSaved(savedId);
 

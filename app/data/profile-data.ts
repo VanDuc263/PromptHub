@@ -40,6 +40,8 @@ export const creatorProfile = {
   preferredModels: ["GPT-5", "Claude", "Gemini", "DeepSeek"],
 };
 
+export type CreatorProfileData = typeof creatorProfile & { avatarUrl?: string | null };
+
 export const profileStats = [
   { label: "Public Prompts", value: "48", icon: FileCode2, change: "+4 this month" },
   { label: "Collections", value: "12", icon: Boxes, change: "+2 this month" },

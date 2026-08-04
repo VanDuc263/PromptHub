@@ -98,7 +98,7 @@ export function ConfigurationPanel({
           <div>
             <FieldLabel>Visibility</FieldLabel>
             <SelectField value={metadata.visibility} onChange={(event) => onMetadataChange({ ...metadata, visibility: event.target.value as PromptEditorMetadata["visibility"] })}>
-              <option>Private</option><option>Public</option><option>Workspace</option>
+              <option>Private</option><option>Public</option>
             </SelectField>
           </div>
           <div>

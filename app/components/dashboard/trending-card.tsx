@@ -9,9 +9,11 @@ import type { TrendingPrompt } from "@/types";
 export function TrendingCard({
   prompt,
   onAction,
+  onOpen,
 }: {
   prompt: TrendingPrompt;
   onAction: (label: string) => void;
+  onOpen?: () => void;
 }) {
   const savedId = savedKeyForTitle(prompt.title);
   const { isSaved, toggleSaved } = useSavedPrompts();
@@ -26,7 +28,7 @@ export function TrendingCard({
       <div className="flex items-start gap-3">
         <span className="font-mono text-xs font-semibold text-violet-400">#{prompt.rank}</span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-slate-100">{prompt.title}</h3>
+          <button type="button" onClick={onOpen} className="block max-w-full truncate text-left text-sm font-semibold text-slate-100 hover:text-violet-300">{prompt.title}</button>
           <p className="mt-1 text-[11px] text-slate-600">{prompt.category}</p>
         </div>
         <Button variant="icon" size="icon" className="size-8" onClick={toggleSave} aria-label={saved ? "Unsave prompt" : "Save prompt"}>

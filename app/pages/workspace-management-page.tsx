@@ -13,34 +13,57 @@ import {
   Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityTimeline } from "@/components/workspace/activity-timeline";
 import { CollectionGrid } from "@/components/workspace/collection-grid";
 import { InviteMemberModal, type InviteMemberInput } from "@/components/workspace/invite-member-modal";
 import { MemberTable } from "@/components/workspace/member-table";
-import { UsageAnalytics } from "@/components/workspace/usage-analytics";
 import { WorkspaceCard } from "@/components/workspace/workspace-card";
 import { WorkspaceOverview } from "@/components/workspace/workspace-overview";
 import { WorkspaceSettings } from "@/components/workspace/workspace-settings";
 import { Button } from "@/components/ui/button";
 import {
   initialInvitations,
-  workspaceActivities,
-  workspaceCollections,
-  workspaceMembers,
-  workspaces,
   type PendingInvitation,
+  type WorkspaceActivity,
+  type WorkspaceCollection,
+  type WorkspaceMember,
+  type WorkspaceSummary,
 } from "@/data/workspace-data";
 import { cn } from "@/lib/utils";
+import { fetchWorkspaceActivitiesRequest, fetchWorkspaceCollectionsRequest, fetchWorkspaceDetailRequest, fetchWorkspaceMembersRequest, fetchWorkspacesRequest, type WorkspaceDetailApi } from "@/lib/workspace-api";
+import { useAppSelector } from "@/store";
 
 type WorkspaceTab = "Overview" | "Members" | "Collections" | "Settings" | "Activity";
 
 const tabs: WorkspaceTab[] = ["Overview", "Members", "Collections", "Settings", "Activity"];
 
-export function WorkspaceManagementPage({ onAction, initialWorkspaceId = "personal" }: { onAction: (label: string) => void; initialWorkspaceId?: string }) {
+export function WorkspaceManagementPage({
+  onAction,
+  onWorkspaceChange,
+  initialWorkspaceId = "personal",
+}: {
+  onAction: (label: string) => void;
+  onWorkspaceChange?: (workspaceId: string) => void;
+  initialWorkspaceId?: string;
+}) {
+  const accessToken = useAppSelector((state) => state.auth.accessToken);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(initialWorkspaceId);
+  const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
+  const [workspaceDetail, setWorkspaceDetail] = useState<WorkspaceDetailApi | null>(null);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
+  const [workspacesLoading, setWorkspacesLoading] = useState(true);
   const [tab, setTab] = useState<WorkspaceTab>("Overview");
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
+  const [collections, setCollections] = useState<WorkspaceCollection[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
+  const [collectionsError, setCollectionsError] = useState<string | null>(null);
+  const [activities, setActivities] = useState<WorkspaceActivity[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [activitiesError, setActivitiesError] = useState<string | null>(null);
   const [memberQuery, setMemberQuery] = useState("");
   const [memberRole, setMemberRole] = useState("All roles");
   const [invitations, setInvitations] = useState<PendingInvitation[]>(initialInvitations);
@@ -48,16 +71,84 @@ export function WorkspaceManagementPage({ onAction, initialWorkspaceId = "person
   const [onlyMine, setOnlyMine] = useState(false);
   const currentWorkspace = workspaces.find((workspace) => workspace.id === currentWorkspaceId) ?? workspaces[0];
 
+  useEffect(() => {
+    if (!accessToken) return;
+    let active = true;
+    fetchWorkspacesRequest(accessToken)
+      .then((items) => {
+        if (!active) return;
+        setWorkspaces(items);
+        const requested = items.find((item) => item.id === initialWorkspaceId)
+          ?? (initialWorkspaceId === "backend" ? items.find((item) => !item.personal) : items.find((item) => item.personal))
+          ?? items[0];
+        if (requested) {
+          setCurrentWorkspaceId(requested.id);
+          if (requested.id !== initialWorkspaceId) onWorkspaceChange?.(requested.id);
+        }
+      })
+      .catch((error: unknown) => active && setWorkspaceError(error instanceof Error ? error.message : "Could not load workspaces."))
+      .finally(() => active && setWorkspacesLoading(false));
+    return () => { active = false; };
+  }, [accessToken, initialWorkspaceId, onWorkspaceChange]);
+
+  useEffect(() => {
+    if (!accessToken || !workspaces.some((workspace) => workspace.id === currentWorkspaceId)) return;
+    let active = true;
+    fetchWorkspaceDetailRequest(currentWorkspaceId, accessToken)
+      .then((detail) => active && setWorkspaceDetail(detail))
+      .catch((error: unknown) => active && setWorkspaceError(error instanceof Error ? error.message : "Could not load workspace details."));
+    return () => { active = false; };
+  }, [accessToken, currentWorkspaceId, workspaces]);
+
+  useEffect(() => {
+    if (!accessToken || !workspaces.some((workspace) => workspace.id === currentWorkspaceId)) return;
+    let active = true;
+    setActivities([]);
+    setActivitiesError(null);
+    setActivitiesLoading(true);
+    fetchWorkspaceActivitiesRequest(currentWorkspaceId, accessToken)
+      .then((items) => active && setActivities(items))
+      .catch((error: unknown) => active && setActivitiesError(error instanceof Error ? error.message : "Could not load workspace activity."))
+      .finally(() => active && setActivitiesLoading(false));
+    return () => { active = false; };
+  }, [accessToken, currentWorkspaceId, workspaces]);
+
+  useEffect(() => {
+    if (!accessToken || !workspaces.some((workspace) => workspace.id === currentWorkspaceId)) return;
+    let active = true;
+    setCollections([]);
+    setCollectionsError(null);
+    setCollectionsLoading(true);
+    fetchWorkspaceCollectionsRequest(currentWorkspaceId, accessToken)
+      .then((items) => active && setCollections(items))
+      .catch((error: unknown) => active && setCollectionsError(error instanceof Error ? error.message : "Could not load workspace collections."))
+      .finally(() => active && setCollectionsLoading(false));
+    return () => { active = false; };
+  }, [accessToken, currentWorkspaceId, workspaces]);
+
+  useEffect(() => {
+    if (!accessToken || !workspaces.some((workspace) => workspace.id === currentWorkspaceId)) return;
+    let active = true;
+    setMembers([]);
+    setMembersError(null);
+    setMembersLoading(true);
+    fetchWorkspaceMembersRequest(currentWorkspaceId, accessToken)
+      .then((items) => active && setMembers(items))
+      .catch((error: unknown) => active && setMembersError(error instanceof Error ? error.message : "Could not load workspace members."))
+      .finally(() => active && setMembersLoading(false));
+    return () => { active = false; };
+  }, [accessToken, currentWorkspaceId, workspaces]);
+
   const visibleMembers = useMemo(
-    () => workspaceMembers.filter((member) => {
-      const matchesQuery = `${member.name} ${member.email}`.toLowerCase().includes(memberQuery.toLowerCase());
+    () => members.filter((member) => {
+      const matchesQuery = `${member.name} ${member.username ?? ""} ${member.email}`.toLowerCase().includes(memberQuery.trim().toLowerCase());
       return matchesQuery && (memberRole === "All roles" || member.role === memberRole);
     }),
-    [memberQuery, memberRole],
+    [memberQuery, memberRole, members],
   );
 
   const visibleActivities = useMemo(
-    () => workspaceActivities.filter((activity) => {
+    () => activities.filter((activity) => {
       const periodMatch = activityPeriod === "This Month"
         ? true
         : activityPeriod === "This Week"
@@ -65,7 +156,7 @@ export function WorkspaceManagementPage({ onAction, initialWorkspaceId = "person
           : activity.period === "Today";
       return periodMatch && (!onlyMine || activity.mine);
     }),
-    [activityPeriod, onlyMine],
+    [activities, activityPeriod, onlyMine],
   );
 
   const invite = (input: InviteMemberInput) => {
@@ -102,25 +193,30 @@ export function WorkspaceManagementPage({ onAction, initialWorkspaceId = "person
             <span className="hidden text-[10px] text-slate-600 sm:block">{workspaces.length} workspaces</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {workspacesLoading && Array.from({ length: 2 }, (_, index) => <div key={index} className="h-44 animate-pulse rounded-xl border border-white/[.07] bg-[#161b22]" />)}
             {workspaces.map((workspace) => (
               <WorkspaceCard
                 key={workspace.id}
                 workspace={workspace}
                 current={workspace.id === currentWorkspaceId}
                 onSelect={() => {
+                  setWorkspaceDetail(null);
+                  setWorkspaceError(null);
                   setCurrentWorkspaceId(workspace.id);
+                  onWorkspaceChange?.(workspace.id);
                   onAction(`Switched to ${workspace.name}`);
                 }}
               />
             ))}
           </div>
+          {workspaceError && <p role="alert" className="mt-3 rounded-lg border border-rose-400/20 bg-rose-500/[.06] px-4 py-3 text-xs text-rose-300">{workspaceError}</p>}
         </section>
 
-        <motion.div key={currentWorkspaceId} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="mt-8">
-          <WorkspaceOverview />
-        </motion.div>
+        {currentWorkspace && <motion.div key={currentWorkspaceId} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="mt-8">
+          <WorkspaceOverview overview={workspaceDetail?.overview} />
+        </motion.div>}
 
-        <div className="sticky top-[72px] z-20 -mx-4 mt-8 border-y border-white/[.07] bg-[#0d1117]/92 px-4 backdrop-blur-xl sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
+        {currentWorkspace && <div className="sticky top-[72px] z-20 -mx-4 mt-8 border-y border-white/[.07] bg-[#0d1117]/92 px-4 backdrop-blur-xl sm:-mx-6 sm:px-6 xl:-mx-8 xl:px-8">
           <div className="flex gap-6 overflow-x-auto" role="tablist" aria-label="Workspace management sections">
             {tabs.map((item) => (
               <button
@@ -135,25 +231,28 @@ export function WorkspaceManagementPage({ onAction, initialWorkspaceId = "person
                 )}
               >
                 {item}
-                {item === "Members" && <span className="ml-1 text-[9px] text-slate-700">({workspaceMembers.length})</span>}
+                {item === "Members" && <span className="ml-1 text-[9px] text-slate-700">({members.length || currentWorkspace.members || 0})</span>}
                 {tab === item && <motion.span layoutId="workspace-tab-underline" className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-violet-400" transition={{ type: "spring", stiffness: 450, damping: 34 }} />}
               </button>
             ))}
           </div>
-        </div>
+        </div>}
 
-        <main className="mt-6 min-h-[560px]">
+        {currentWorkspace && <main className="mt-6 min-h-[560px]">
           <AnimatePresence mode="wait">
             <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.17 }}>
-              {tab === "Overview" && <OverviewTab workspaceName={currentWorkspace.name} workspaceInitials={currentWorkspace.initials} onAction={onAction} />}
+              {tab === "Overview" && <OverviewTab workspace={currentWorkspace} detail={workspaceDetail} onAction={onAction} />}
               {tab === "Members" && (
                 <MemberTable
                   members={visibleMembers}
                   invitations={invitations}
                   query={memberQuery}
                   role={memberRole}
+                  loading={membersLoading}
+                  error={membersError}
                   onQueryChange={setMemberQuery}
                   onRoleChange={setMemberRole}
+                  canInvite
                   onInvite={() => setInviteOpen(true)}
                   onAction={onAction}
                   onCancelInvitation={(id) => {
@@ -162,20 +261,22 @@ export function WorkspaceManagementPage({ onAction, initialWorkspaceId = "person
                   }}
                 />
               )}
-              {tab === "Collections" && <CollectionGrid collections={workspaceCollections} onCreate={() => onAction("Create Collection opened")} onAction={onAction} />}
+              {tab === "Collections" && <CollectionGrid collections={collections} loading={collectionsLoading} error={collectionsError} onCreate={() => onAction("Create Collection opened")} onAction={onAction} />}
               {tab === "Settings" && <WorkspaceSettings onAction={onAction} />}
               {tab === "Activity" && (
                 <ActivityTab
                   period={activityPeriod}
                   onlyMine={onlyMine}
                   activities={visibleActivities}
+                  loading={activitiesLoading}
+                  error={activitiesError}
                   onPeriodChange={setActivityPeriod}
                   onOnlyMineChange={setOnlyMine}
                 />
               )}
             </motion.div>
           </AnimatePresence>
-        </main>
+        </main>}
       </div>
 
       <InviteMemberModal open={inviteOpen} onOpenChange={setInviteOpen} onInvite={invite} />
@@ -183,7 +284,9 @@ export function WorkspaceManagementPage({ onAction, initialWorkspaceId = "person
   );
 }
 
-function OverviewTab({ workspaceName, workspaceInitials, onAction }: { workspaceName: string; workspaceInitials: string; onAction: (label: string) => void }) {
+function OverviewTab({ workspace, detail, onAction }: { workspace: WorkspaceSummary; detail: WorkspaceDetailApi | null; onAction: (label: string) => void }) {
+  const createdAt = detail ? new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(detail.createdAt)) : "Loading…";
+  const workspaceUrl = `${window.location.host}/w/${detail?.slug ?? workspace.slug}`;
   return (
     <div className="space-y-6">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,.95fr)]">
@@ -193,15 +296,15 @@ function OverviewTab({ workspaceName, workspaceInitials, onAction }: { workspace
             <Button variant="secondary" size="sm" onClick={() => onAction("Workspace edit opened")}><Settings className="size-3.5" /> Edit</Button>
           </div>
           <div className="mt-6 flex flex-col gap-5 sm:flex-row">
-            <span className="grid size-20 shrink-0 place-items-center rounded-2xl border border-violet-400/20 bg-violet-500/[.08] text-lg font-semibold text-violet-300">{workspaceInitials}</span>
+            <span className="grid size-20 shrink-0 place-items-center rounded-2xl border border-violet-400/20 bg-violet-500/[.08] text-lg font-semibold text-violet-300">{workspace.initials}</span>
             <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-semibold text-slate-100">{workspaceName}</h3>
-              <p className="mt-2 max-w-xl text-xs leading-5 text-slate-500">A focused workspace for building, testing and organizing production-ready prompts with your collaborators.</p>
+              <h3 className="text-lg font-semibold text-slate-100">{workspace.name}</h3>
+              <p className="mt-2 max-w-xl text-xs leading-5 text-slate-500">{detail?.description ?? workspace.description}</p>
               <div className="mt-5 grid gap-4 border-t border-white/[.06] pt-4 sm:grid-cols-2">
-                <InfoRow icon={CalendarDays} label="Created" value="January 12, 2024" />
-                <InfoRow icon={Users} label="Owner" value="Van Duc" />
-                <InfoRow icon={Link2} label="Workspace URL" value="prompthub.dev/w/personal" action={<button type="button" onClick={() => onAction("Workspace URL copied")} aria-label="Copy workspace URL"><Copy className="size-3 text-slate-600 hover:text-violet-400" /></button>} />
-                <InfoRow icon={LockKeyhole} label="Visibility" value="Private" />
+                <InfoRow icon={CalendarDays} label="Created" value={createdAt} />
+                <InfoRow icon={Users} label="Owner" value={detail?.ownerName ?? "Loading…"} />
+                <InfoRow icon={Link2} label="Workspace URL" value={workspaceUrl} action={<button type="button" onClick={() => { void navigator.clipboard.writeText(`${window.location.origin}/w/${detail?.slug ?? workspace.slug}`); onAction("Workspace URL copied"); }} aria-label="Copy workspace URL"><Copy className="size-3 text-slate-600 hover:text-violet-400" /></button>} />
+                <InfoRow icon={LockKeyhole} label="Access" value={detail?.personal ? "Personal" : "Workspace members"} />
               </div>
             </div>
           </div>
@@ -209,10 +312,9 @@ function OverviewTab({ workspaceName, workspaceInitials, onAction }: { workspace
 
         <section>
           <div className="mb-3 flex items-end justify-between"><div><h2 className="text-sm font-semibold text-slate-100">Recent Activity</h2><p className="mt-1 text-xs text-slate-600">Latest changes from your team.</p></div><button type="button" className="text-[10px] font-medium text-violet-400 hover:text-violet-300">View all</button></div>
-          <ActivityTimeline activities={workspaceActivities.slice(0, 5)} compact />
+          <ActivityTimeline activities={detail?.recentActivity ?? []} compact />
         </section>
       </div>
-      <UsageAnalytics />
     </div>
   );
 }
@@ -221,12 +323,16 @@ function ActivityTab({
   period,
   onlyMine,
   activities,
+  loading,
+  error,
   onPeriodChange,
   onOnlyMineChange,
 }: {
   period: string;
   onlyMine: boolean;
-  activities: typeof workspaceActivities;
+  activities: WorkspaceActivity[];
+  loading: boolean;
+  error: string | null;
   onPeriodChange: (period: string) => void;
   onOnlyMineChange: (value: boolean) => void;
 }) {
@@ -241,7 +347,8 @@ function ActivityTab({
           <button type="button" role="switch" aria-checked={onlyMine} onClick={() => onOnlyMineChange(!onlyMine)} className={cn("rounded-lg border px-3 text-[10px] font-medium transition", onlyMine ? "border-violet-400/25 bg-violet-500/[.07] text-violet-300" : "border-white/[.08] bg-[#161b22] text-slate-500")}>Only Mine</button>
         </div>
       </div>
-      <ActivityTimeline activities={activities} />
+      {error && <p role="alert" className="mb-4 rounded-lg border border-rose-400/20 bg-rose-500/[.06] px-4 py-3 text-xs text-rose-300">{error}</p>}
+      {loading ? <div aria-label="Loading activity" className="space-y-2 rounded-xl border border-white/[.07] bg-[#161b22] p-3">{Array.from({ length: 5 }, (_, index) => <div key={index} className="flex items-center gap-3 p-2"><span className="size-9 animate-pulse rounded-full bg-white/[.05]" /><span className="h-3 w-56 animate-pulse rounded bg-white/[.05]" /></div>)}</div> : <ActivityTimeline activities={activities} />}
     </div>
   );
 }

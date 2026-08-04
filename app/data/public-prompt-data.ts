@@ -55,6 +55,8 @@ Return the implementation in this order:
 
 Do not omit imports. Explain important architecture decisions after the code.`;
 
+export const publicSystemMessage = "You are a senior software architect. Produce accurate, production-ready output and clearly state any assumptions.";
+
 export const publicVariables: PublicPromptVariable[] = [
   { name: "domain", description: "Business domain or resource", defaultValue: "Product catalog", required: true, example: "Order management" },
   { name: "api_type", description: "API interaction pattern", defaultValue: "CRUD", required: true, example: "Search and CRUD" },

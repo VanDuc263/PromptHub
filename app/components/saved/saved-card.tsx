@@ -15,6 +15,7 @@ export function SavedCard({
   onSelect,
   onRemove,
   onAction,
+  onOpen,
 }: {
   prompt: SavedPrompt;
   selected: boolean;
@@ -22,6 +23,7 @@ export function SavedCard({
   onSelect: () => void;
   onRemove: () => void;
   onAction: (label: string) => void;
+  onOpen: () => void;
 }) {
   const Icon = prompt.icon;
   return (
@@ -78,7 +80,7 @@ export function SavedCard({
       </div>
 
       <div className={cn("mt-4 flex flex-wrap gap-2 border-t border-white/[.06] pt-3", list && "sm:mt-0 sm:w-36 sm:flex-col sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0")}>
-        <Button size="sm" className="flex-1 bg-emerald-500 text-[#07120b] hover:bg-emerald-400" onClick={() => onAction(`Opened ${prompt.title}`)}><ExternalLink className="size-3.5" /> Open</Button>
+        <Button size="sm" className="flex-1 bg-emerald-500 text-[#07120b] hover:bg-emerald-400" onClick={onOpen}><ExternalLink className="size-3.5" /> Open</Button>
         <Button size="sm" variant="secondary" onClick={() => onAction(`${prompt.title} copied`)}><Copy className="size-3.5" /> Copy</Button>
         <Button size="sm" variant="secondary" onClick={() => onAction(`${prompt.title} forked`)}><GitFork className="size-3.5" /> Fork</Button>
         <Button size="sm" variant="ghost" onClick={() => onAction(`Add ${prompt.title} to collection`)}><FolderPlus className="size-3.5" /> Collection</Button>

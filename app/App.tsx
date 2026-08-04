@@ -71,6 +71,23 @@ const WorkspaceManagementPage = lazy(() =>
   })),
 );
 
+function collectionIdFromPath(path: string) {
+  const match = path.match(/^\/collections\/([^/]+)\/?$/);
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
+}
+
+function pageFromPath(path: string) {
+  if (path === "/history") return "History";
+  if (path === "/collections" || collectionIdFromPath(path)) return "Collections";
+  if (path.startsWith("/prompts/")) return "Public prompt detail";
+  return "Home";
+}
+
 export function App() {
   const { recordAction } = useHistory();
   const dispatch = useAppDispatch();
@@ -80,14 +97,18 @@ export function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(() =>
-    window.location.pathname === "/history" ? "History" : "Home",
-  );
+  const [currentPage, setCurrentPage] = useState(() => pageFromPath(window.location.pathname));
+  const [selectedPublicPromptId, setSelectedPublicPromptId] = useState<string | null>(() => {
+    const match = window.location.pathname.match(/^\/prompts\/([^/]+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  });
+  const [selectedPrivatePromptId, setSelectedPrivatePromptId] = useState<string | null>(null);
   const [detailInitialTab, setDetailInitialTab] = useState<DetailTabId>("overview");
   const [newVersionCreated, setNewVersionCreated] = useState(false);
   const [compareOldVersion, setCompareOldVersion] = useState("v2");
   const [collectionPrompt, setCollectionPrompt] = useState<string | null>(null);
   const [workspaceInitialId, setWorkspaceInitialId] = useState("personal");
+  const selectedCollectionId = collectionIdFromPath(pathname);
 
   const handleAction = useCallback((label: string) => {
     if (label === "Sign in selected" || label === "Create account selected") {
@@ -122,6 +143,7 @@ export function App() {
     }
     if (label === "New prompt created" || label === "Create prompt opened") {
       if (label === "New prompt created") recordAction(label);
+      setSelectedPrivatePromptId(null);
       setCurrentPage("Create prompt");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -144,6 +166,8 @@ export function App() {
       return;
     }
     if (label === "Collections opened") {
+      window.history.pushState({}, "", "/collections");
+      setPathname("/collections");
       setCurrentPage("Collections");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -211,10 +235,24 @@ export function App() {
   useKeyboardShortcut("k", openSearch, { ctrlOrMeta: true });
 
   useEffect(() => {
-    const handlePopState = () => setPathname(window.location.pathname);
+    const handlePopState = () => {
+      const nextPath = window.location.pathname;
+      setPathname(nextPath);
+      const promptMatch = nextPath.match(/^\/prompts\/([^/]+)$/);
+      if (promptMatch) {
+        setSelectedPublicPromptId(decodeURIComponent(promptMatch[1]));
+        setCurrentPage("Public prompt detail");
+      } else if (nextPath === "/collections" || collectionIdFromPath(nextPath)) {
+        setCurrentPage("Collections");
+      } else if (nextPath === "/history") {
+        setCurrentPage("History");
+      } else {
+        setCurrentPage("Home");
+      }
+    };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [currentPage]);
 
   const navigate = useCallback((path: string) => {
     dispatch(clearAuthError());
@@ -239,8 +277,15 @@ export function App() {
         collapsed={sidebarCollapsed}
         mobileOpen={mobileOpen}
         currentPage={currentPage}
+        activeWorkspaceId={workspaceInitialId}
         onCollapse={() => setSidebarCollapsed((value) => !value)}
         onMobileClose={() => setMobileOpen(false)}
+        onWorkspaceNavigate={(workspaceId) => {
+          setMobileOpen(false);
+          setWorkspaceInitialId(workspaceId);
+          setCurrentPage("Workspace Management");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
         onNavigate={(label) => {
           setMobileOpen(false);
           if (!user && label !== "Home" && label !== "Explore") {
@@ -256,12 +301,14 @@ export function App() {
             label === "History"
           ) {
             setCurrentPage(label);
-            window.history.pushState({}, "", label === "History" ? "/history" : "/");
+            const path = label === "History" ? "/history" : label === "Collections" ? "/collections" : "/";
+            window.history.pushState({}, "", path);
+            setPathname(path);
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
           }
-          if (label === "Personal" || label === "Backend Team" || label === "Create workspace") {
-            setWorkspaceInitialId(label === "Backend Team" ? "backend" : "personal");
+          if (label === "Create workspace") {
+            setWorkspaceInitialId("personal");
             setCurrentPage("Workspace Management");
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
@@ -287,6 +334,7 @@ export function App() {
             <WorkspaceManagementPage
               key={workspaceInitialId}
               initialWorkspaceId={workspaceInitialId}
+              onWorkspaceChange={setWorkspaceInitialId}
               onAction={handleAction}
             />
           </Suspense>
@@ -306,13 +354,39 @@ export function App() {
           </Suspense>
         ) : currentPage === "Collections" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
-            <CollectionsPage onAction={handleAction} />
+            <CollectionsPage
+              collectionId={selectedCollectionId}
+              onOpenCollection={(collectionId) => {
+                const path = `/collections/${encodeURIComponent(collectionId)}`;
+                window.history.pushState({}, "", path);
+                setPathname(path);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onBackToCollections={() => {
+                window.history.pushState({}, "", "/collections");
+                setPathname("/collections");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onAction={handleAction}
+            />
           </Suspense>
         ) : currentPage === "Saved" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <SavedPage
               onExplore={() => setCurrentPage("Explore")}
               onAction={handleAction}
+              onOpenPrompt={(promptId, visibility) => {
+                if (visibility === "Private") {
+                  setSelectedPrivatePromptId(promptId);
+                  setDetailInitialTab("overview");
+                  setCurrentPage("Prompt detail");
+                } else {
+                  setSelectedPublicPromptId(promptId);
+                  window.history.pushState({}, "", `/prompts/${encodeURIComponent(promptId)}`);
+                  setCurrentPage("Public prompt detail");
+                }
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
             />
           </Suspense>
         ) : currentPage === "User profile public" || currentPage === "User profile owner" ? (
@@ -325,13 +399,25 @@ export function App() {
         ) : currentPage === "Public prompt detail" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
             <PublicPromptDetailPage
-              onBack={() => setCurrentPage("Explore")}
+              promptId={selectedPublicPromptId}
+              onBack={() => {
+                window.history.pushState({}, "", "/");
+                setCurrentPage("Explore");
+              }}
               onAction={handleAction}
             />
           </Suspense>
         ) : currentPage === "Explore" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
-            <ExplorePage onAction={handleAction} />
+            <ExplorePage
+              onAction={handleAction}
+              onOpenPrompt={(promptId) => {
+                setSelectedPublicPromptId(promptId);
+                window.history.pushState({}, "", `/prompts/${encodeURIComponent(promptId)}`);
+                setCurrentPage("Public prompt detail");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
           </Suspense>
         ) : currentPage === "Compare versions" ? (
           <Suspense fallback={<VersionPageSkeleton />}>
@@ -363,6 +449,7 @@ export function App() {
           </Suspense>
         ) : currentPage === "Prompt detail" ? (
           <PromptDetailPage
+            promptId={selectedPrivatePromptId}
             onBack={() => setCurrentPage("My prompts")}
             onEdit={() => setCurrentPage("Create prompt")}
             onAction={handleAction}
@@ -378,16 +465,48 @@ export function App() {
           />
         ) : currentPage === "Create prompt" ? (
           <CreatePromptPage
+            key={selectedPrivatePromptId ?? "new-prompt"}
+            promptId={selectedPrivatePromptId}
             onBack={() => setCurrentPage("My prompts")}
             onAction={handleAction}
+            onCreated={() => setCurrentPage("My prompts")}
           />
         ) : currentPage === "My prompts" ? (
           <MyPromptsPage
             onAction={handleAction}
-            onCreatePrompt={() => setCurrentPage("Create prompt")}
+            onCreatePrompt={() => {
+              setSelectedPrivatePromptId(null);
+              setCurrentPage("Create prompt");
+            }}
+            onEditPrompt={(promptId) => {
+              setSelectedPrivatePromptId(promptId);
+              setCurrentPage("Create prompt");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onOpenPrompt={(promptId) => {
+              recordAction(`Opened prompt ${promptId}`);
+              setSelectedPrivatePromptId(promptId);
+              setDetailInitialTab("overview");
+              setCurrentPage("Prompt detail");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           />
         ) : (
-          <HomePage onAction={handleAction} />
+          <HomePage
+            onAction={handleAction}
+            onNavigate={(destination) => {
+              if (destination === "Create prompt") setSelectedPrivatePromptId(null);
+              setCurrentPage(destination);
+              window.history.pushState({}, "", destination === "History" ? "/history" : "/");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onOpenPublicPrompt={(promptId) => {
+              setSelectedPublicPromptId(promptId);
+              window.history.pushState({}, "", `/prompts/${encodeURIComponent(promptId)}`);
+              setCurrentPage("Public prompt detail");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
         )}
       </main>
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} onAction={handleAction} />

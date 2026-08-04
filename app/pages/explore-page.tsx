@@ -24,8 +24,10 @@ import { fetchExplorePrompts } from "@/store/explore-slice";
 
 export function ExplorePage({
   onAction,
+  onOpenPrompt,
 }: {
   onAction: (label: string) => void;
+  onOpenPrompt: (promptId: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<ExploreFilters>(defaultExploreFilters);
@@ -107,11 +109,7 @@ export function ExplorePage({
   };
 
   const openPrompt = (prompt: ExplorePrompt) => {
-    if (prompt.title === "Spring Boot API Generator") {
-      onAction("Opened public prompt detail");
-      return;
-    }
-    onAction(`Community prompt opened: ${prompt.title}`);
+    onOpenPrompt(String(prompt.id));
   };
 
   return (

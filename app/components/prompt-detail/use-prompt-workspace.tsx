@@ -13,28 +13,42 @@ import { useMemo, useState } from "react";
 import { FieldLabel, SelectField, TextAreaField, TextField } from "@/components/prompt-editor/field";
 import { Button } from "@/components/ui/button";
 import { detailVariables, promptTemplate } from "@/data/prompt-detail-data";
-
-const initialValues = Object.fromEntries(
-  detailVariables.map((variable) => [variable.name, variable.defaultValue]),
-);
+import type { PromptDetailVariable } from "@/types";
 
 export function UsePromptWorkspace({
   onAction,
+  template = promptTemplate,
+  systemMessage = "",
+  variables = detailVariables,
+  filename = "generated-prompt.txt",
 }: {
   onAction: (label: string) => void;
+  template?: string;
+  systemMessage?: string;
+  variables?: PromptDetailVariable[];
+  filename?: string;
 }) {
-  const [values, setValues] = useState<Record<string, string>>(initialValues);
+  const initialValues = Object.fromEntries(
+    variables.map((variable) => [variable.name, variable.defaultValue]),
+  );
+  const [values, setValues] = useState<Record<string, string>>(() => initialValues);
   const [copied, setCopied] = useState(false);
-  const missingRequired = detailVariables.filter(
+  const missingRequired = variables.filter(
     (variable) => variable.required && !values[variable.name]?.trim(),
   );
 
   const renderedPrompt = useMemo(
-    () =>
-      promptTemplate.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_, name: string) => {
+    () => {
+      const render = (source: string) => source.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_, name: string) => {
         return values[name]?.trim() || `[Missing: ${name}]`;
-      }),
-    [values],
+      });
+      const renderedTemplate = render(template);
+      const renderedSystemMessage = render(systemMessage);
+      return renderedSystemMessage
+        ? `System message:\n${renderedSystemMessage}\n\nUser prompt:\n${renderedTemplate}`
+        : renderedTemplate;
+    },
+    [systemMessage, template, values],
   );
 
   const copyPrompt = async () => {
@@ -51,7 +65,7 @@ export function UsePromptWorkspace({
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "java-code-reviewer.txt";
+    anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
     onAction("Prompt downloaded");
@@ -82,7 +96,7 @@ export function UsePromptWorkspace({
           </div>
         </div>
         <div className="grid gap-5 p-5 lg:grid-cols-2">
-          {detailVariables.map((variable) => (
+          {variables.map((variable) => (
             <div key={variable.name} className={variable.name === "source_code" || variable.name === "requirements" ? "lg:col-span-2" : ""}>
               <FieldLabel optional={!variable.required}>
                 <span>{variable.label}{variable.required && <span className="ml-1 text-violet-400">*</span>}</span>
@@ -129,7 +143,7 @@ export function UsePromptWorkspace({
             <span className="mx-auto grid size-10 place-items-center rounded-lg bg-amber-500/[.08] text-amber-400"><TriangleAlert className="size-[18px]" /></span>
             <h3 className="mt-4 text-sm font-medium text-slate-300">Complete required variables</h3>
             <p className="mx-auto mt-1.5 max-w-sm text-xs leading-5 text-slate-600">
-              Add your source code to generate the final prompt. Missing variables are highlighted above.
+              Complete the highlighted fields above to generate the final prompt.
             </p>
           </div>
         ) : (

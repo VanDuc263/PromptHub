@@ -26,16 +26,22 @@ const visibilityIcons = {
 export function PromptListItem({
   prompt,
   onAction,
+  onOpen,
+  onEdit,
+  onVisibilityChange,
 }: {
   prompt: LibraryPrompt;
   onAction: (label: string) => void;
+  onOpen: (promptId: string) => void;
+  onEdit: (promptId: string) => void;
+  onVisibilityChange: (promptId: string, visibility: "Private" | "Public") => void;
 }) {
   const VisibilityIcon = visibilityIcons[prompt.visibility];
 
   return (
     <article className="group relative grid gap-4 rounded-xl border border-white/[.07] bg-[#161b22] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-violet-500/35 hover:bg-[#181e26] hover:shadow-[0_12px_32px_rgba(0,0,0,.16)] md:grid-cols-[minmax(0,1fr)_130px_100px_145px_40px] md:items-center md:gap-5 md:px-5">
       <span className={cn("absolute bottom-4 left-0 top-4 w-0.5 rounded-r opacity-70", prompt.accent)} />
-      <button type="button" onClick={() => onAction(`Opened ${prompt.title}`)} className="min-w-0 text-left outline-none">
+      <button type="button" onClick={() => onOpen(String(prompt.id))} className="min-w-0 text-left outline-none">
         <div className="flex items-center gap-2">
           <h3 className="truncate text-sm font-semibold text-slate-100 transition group-hover:text-violet-200">{prompt.title}</h3>
           {prompt.status === "Draft" && (
@@ -48,10 +54,10 @@ export function PromptListItem({
         </div>
       </button>
 
-      <div className="hidden items-center gap-1.5 text-xs text-slate-500 md:flex">
+      <label className="hidden items-center gap-1.5 text-xs text-slate-500 md:flex">
         <VisibilityIcon className="size-3.5" />
-        {prompt.visibility}
-      </div>
+        <select value={prompt.visibility === "Team" ? "Private" : prompt.visibility} onChange={(event) => onVisibilityChange(String(prompt.id), event.target.value as "Private" | "Public")} className="min-w-0 rounded-md border border-white/[.07] bg-[#0d1117] px-2 py-1.5 text-[11px] text-slate-400 outline-none focus:border-violet-500/50"><option>Private</option><option>Public</option></select>
+      </label>
       <div className="hidden md:block">
         <span className="rounded-md border border-white/[.06] bg-white/[.03] px-2 py-1 font-mono text-[11px] text-slate-500">{prompt.version}</span>
       </div>
@@ -65,7 +71,7 @@ export function PromptListItem({
 
       <div className="flex items-center justify-between border-t border-white/[.06] pt-3 md:border-0 md:pt-0">
         <div className="flex items-center gap-3 text-[11px] text-slate-600 md:hidden">
-          <span className="inline-flex items-center gap-1.5"><VisibilityIcon className="size-3.5" />{prompt.visibility}</span>
+          <label className="inline-flex items-center gap-1.5"><VisibilityIcon className="size-3.5" /><select value={prompt.visibility === "Team" ? "Private" : prompt.visibility} onChange={(event) => onVisibilityChange(String(prompt.id), event.target.value as "Private" | "Public")} className="rounded-md border border-white/[.07] bg-[#0d1117] px-1.5 py-1 text-[10px] text-slate-400"><option>Private</option><option>Public</option></select></label>
           <span>{prompt.version}</span>
           <span>{prompt.updatedAt}</span>
         </div>
@@ -77,8 +83,8 @@ export function PromptListItem({
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content align="end" sideOffset={6} className="dropdown-content w-44 p-1.5">
-              <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Opened ${prompt.title}`)}><Eye /> Open</DropdownMenu.Item>
-              <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Editing ${prompt.title}`)}><FilePenLine /> Edit</DropdownMenu.Item>
+              <DropdownMenu.Item className="dropdown-item" onSelect={() => onOpen(String(prompt.id))}><Eye /> Open</DropdownMenu.Item>
+              <DropdownMenu.Item className="dropdown-item" onSelect={() => onEdit(String(prompt.id))}><FilePenLine /> Edit</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Copied ${prompt.title}`)}><Copy /> Duplicate</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Sharing ${prompt.title}`)}><Share2 /> Share</DropdownMenu.Item>
               <DropdownMenu.Item className="dropdown-item" onSelect={() => onAction(`Add ${prompt.title} to collection`)}><FolderPlus /> Add to Collection</DropdownMenu.Item>

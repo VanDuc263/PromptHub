@@ -9,6 +9,7 @@ import {
   Expand,
   FileCode2,
   ListTree,
+  Star,
   Variable,
   WrapText,
   X,
@@ -19,11 +20,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   publicExamples,
-  publicPromptContent,
-  publicVariables,
   publicVersions,
 } from "@/data/public-prompt-data";
 import { cn } from "@/lib/utils";
+import { usePublicPromptData } from "@/context/public-prompt-context";
+import type { PublicPromptVariable } from "@/types";
+import { PromptReviews } from "@/components/prompt-detail/prompt-feedback-sections";
+import { PromptComments } from "@/components/prompt-detail/prompt-feedback-sections";
+import { UsePromptWorkspace } from "@/components/prompt-detail/use-prompt-workspace";
 
 const tabs = [
   { id: "prompt", label: "Prompt", icon: FileCode2 },
@@ -31,19 +35,25 @@ const tabs = [
   { id: "examples", label: "Examples", icon: Code2 },
   { id: "documentation", label: "Documentation", icon: BookOpenText },
   { id: "versions", label: "Versions", icon: Clock3 },
+  { id: "reviews", label: "Reviews", icon: Star },
 ] as const;
 
 type PublicTab = (typeof tabs)[number]["id"];
 
 export function PublicPromptTabs({
   onAction,
+  promptId,
 }: {
   onAction: (label: string) => void;
+  promptId: string | null;
 }) {
   const [activeTab, setActiveTab] = useState<PublicTab>("prompt");
+  const { prompt, content, systemMessage, variables, runVariables } = usePublicPromptData();
+  const filename = `${prompt.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "prompt"}.txt`;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/[.07] bg-[#161b22]">
+    <>
+      <section className="overflow-hidden rounded-2xl border border-white/[.07] bg-[#161b22]">
       <div className="overflow-x-auto border-b border-white/[.07] px-2">
         <div className="flex min-w-max">
           {tabs.map((tab) => {
@@ -73,31 +83,49 @@ export function PublicPromptTabs({
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.16 }}
         >
-          {activeTab === "prompt" && <ReadOnlyPromptEditor />}
-          {activeTab === "variables" && <VariablesTab />}
+          {activeTab === "prompt" && <ReadOnlyPromptEditor title={prompt.title} content={content} systemMessage={systemMessage} />}
+          {activeTab === "variables" && <VariablesTab variables={variables} />}
           {activeTab === "examples" && <ExamplesTab />}
           {activeTab === "documentation" && <DocumentationTab />}
           {activeTab === "versions" && <VersionsTab onAction={onAction} />}
+          {activeTab === "reviews" && (promptId ? <PromptReviews promptId={promptId} embedded /> : <TabEmpty icon={Star} title="No reviews yet" subtitle="Reviews will appear here." />)}
         </motion.div>
       </AnimatePresence>
-    </section>
+      </section>
+      {activeTab === "prompt" && (
+        <>
+          <UsePromptWorkspace
+            key={`use-${promptId ?? "static"}`}
+            template={content}
+            systemMessage={systemMessage}
+            variables={runVariables}
+            filename={filename}
+            onAction={onAction}
+          />
+          {promptId && <PromptComments promptId={promptId} onAction={onAction} />}
+        </>
+      )}
+    </>
   );
 }
 
-function ReadOnlyPromptEditor() {
+function ReadOnlyPromptEditor({ title, content, systemMessage }: { title: string; content: string; systemMessage: string }) {
   const [wrap, setWrap] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const words = publicPromptContent.trim().split(/\s+/).length;
-  const tokens = Math.ceil(publicPromptContent.length / 4);
+  const combinedContent = systemMessage
+    ? `System message:\n${systemMessage}\n\nUser prompt:\n${content}`
+    : content;
+  const words = combinedContent.trim().split(/\s+/).filter(Boolean).length;
+  const tokens = Math.ceil(combinedContent.length / 4);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(publicPromptContent);
+    await navigator.clipboard.writeText(combinedContent);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
   };
 
-  const editor = <CodeEditor wrap={wrap} />;
+  const editor = <CodeEditor wrap={wrap} content={content} />;
 
   return (
     <>
@@ -109,9 +137,15 @@ function ReadOnlyPromptEditor() {
           <Button variant="icon" size="icon" className="size-8" onClick={() => setExpanded(true)} aria-label="Expand prompt"><Expand className="size-3.5" /></Button>
         </div>
       </div>
+      {systemMessage && (
+        <div className="border-b border-white/[.06] bg-violet-500/[.025] px-4 py-4 sm:px-5">
+          <p className="text-[9px] font-semibold uppercase tracking-[.12em] text-violet-400/70">System message</p>
+          <pre className="mt-2 whitespace-pre-wrap font-mono text-[10px] leading-5 text-slate-500">{systemMessage}</pre>
+        </div>
+      )}
       {editor}
       <div className="flex h-9 items-center gap-4 border-t border-white/[.06] px-4 font-mono text-[9px] text-slate-700">
-        <span>{words} words</span><span>~{tokens} tokens</span><span>{publicPromptContent.length} characters</span>
+        <span>{words} words</span><span>~{tokens} tokens</span><span>{combinedContent.length} characters</span>
       </div>
 
       <Dialog.Root open={expanded} onOpenChange={setExpanded}>
@@ -119,12 +153,12 @@ function ReadOnlyPromptEditor() {
           <Dialog.Overlay className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm" />
           <Dialog.Content className="fixed inset-4 z-[90] flex flex-col overflow-hidden rounded-2xl border border-white/[.1] bg-[#161b22] shadow-2xl outline-none sm:inset-8" aria-describedby={undefined}>
             <div className="flex h-14 shrink-0 items-center border-b border-white/[.07] px-4">
-              <Dialog.Title className="text-sm font-semibold text-slate-100">Spring Boot API Generator</Dialog.Title>
+              <Dialog.Title className="text-sm font-semibold text-slate-100">{title}</Dialog.Title>
               <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setWrap((value) => !value)}><WrapText className="size-3.5" /> Wrap</Button>
               <Button variant="ghost" size="sm" onClick={copy}><Copy className="size-3.5" /> Copy</Button>
               <Dialog.Close asChild><Button variant="icon" size="icon" className="size-8"><X className="size-4" /></Button></Dialog.Close>
             </div>
-            <div className="flex-1 overflow-auto"><CodeEditor wrap={wrap} expanded /></div>
+            <div className="flex-1 overflow-auto"><CodeEditor wrap={wrap} content={combinedContent} expanded /></div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -132,11 +166,11 @@ function ReadOnlyPromptEditor() {
   );
 }
 
-function CodeEditor({ wrap, expanded }: { wrap: boolean; expanded?: boolean }) {
+function CodeEditor({ wrap, content, expanded }: { wrap: boolean; content: string; expanded?: boolean }) {
   return (
     <div className={cn("overflow-auto bg-[#0d1117]/75 font-mono text-[11px] leading-6", expanded ? "min-h-full p-5 sm:p-8" : "max-h-[620px] p-4 sm:p-5")}>
       <div className={wrap ? "min-w-0" : "min-w-[760px]"}>
-        {publicPromptContent.split("\n").map((line, index) => (
+        {content.split("\n").map((line, index) => (
           <div key={index} className="grid grid-cols-[36px_1fr]">
             <span className="select-none pr-3 text-right text-slate-800">{index + 1}</span>
             <code className={cn("px-2 text-slate-400", wrap ? "whitespace-pre-wrap" : "whitespace-pre")}>{highlightPrompt(line)}</code>
@@ -156,7 +190,7 @@ function highlightPrompt(line: string) {
   });
 }
 
-function VariablesTab() {
+function VariablesTab({ variables }: { variables: PublicPromptVariable[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-left">
@@ -170,7 +204,7 @@ function VariablesTab() {
           </tr>
         </thead>
         <tbody className="divide-y divide-white/[.055]">
-          {publicVariables.map((variable) => (
+          {variables.map((variable) => (
             <tr key={variable.name} className="transition hover:bg-white/[.02]">
               <td className="px-5 py-4"><code className="rounded bg-violet-500/[.07] px-2 py-1 text-[10px] text-violet-300">{`{{${variable.name}}}`}</code></td>
               <td className="px-5 py-4 text-[11px] text-slate-500">{variable.description}</td>

@@ -18,7 +18,7 @@ export interface Statistic {
 }
 
 export interface Prompt {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   tags: string[];
@@ -53,7 +53,7 @@ export interface Activity {
 export type PromptStatus = "Published" | "Draft";
 
 export interface LibraryPrompt extends Prompt {
-  category: "Programming" | "Marketing" | "English";
+  category: string;
   status: PromptStatus;
   author: string;
 }
@@ -74,7 +74,7 @@ export interface PromptEditorMetadata {
   title: string;
   description: string;
   category: string;
-  visibility: "Private" | "Public" | "Workspace";
+  visibility: "Private" | "Public";
   model: string;
   language: string;
   tags: string[];
@@ -207,7 +207,7 @@ export interface CommunityComment {
 }
 
 export interface ProfilePrompt {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   category: string;
@@ -311,6 +311,8 @@ export interface PromptCollection {
   allowComments: boolean;
   allowFollowers: boolean;
   following?: boolean;
+  coverImageUrl?: string | null;
+  localCoverImageUrl?: string | null;
 }
 
 export type HistoryActivityType =

@@ -1,7 +1,5 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import {
-  BookMarked,
-  ChevronDown,
   Clock3,
   Compass,
   FolderClosed,
@@ -12,21 +10,28 @@ import {
   Plus,
   Settings,
   Sparkle,
-  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { fetchWorkspacesRequest } from "@/lib/workspace-api";
+import { fetchMyPromptsRequest } from "@/lib/my-prompts-api";
+import { fetchSavedPromptsRequest } from "@/lib/saved-prompts-api";
+import { useAppSelector } from "@/store";
+import { useEffect, useState } from "react";
+import type { WorkspaceSummary } from "@/data/workspace-data";
 
 interface AppSidebarProps {
   collapsed: boolean;
   mobileOpen: boolean;
   currentPage: string;
+  activeWorkspaceId: string;
   onCollapse: () => void;
   onMobileClose: () => void;
   onNavigate: (label: string) => void;
+  onWorkspaceNavigate: (workspaceId: string) => void;
 }
 
 const primaryItems = [
@@ -35,16 +40,18 @@ const primaryItems = [
 ];
 
 const libraryItems = [
-  { label: "My prompts", icon: Sparkle, count: 124 },
-  { label: "Saved", icon: Bookmark, count: 48 },
+  { label: "My prompts", icon: Sparkle },
+  { label: "Saved", icon: Bookmark },
   { label: "Collections", icon: FolderClosed },
   { label: "History", icon: Clock3 },
 ];
 
-const workspaces = [
-  { label: "Personal", icon: BookMarked, marker: "bg-violet-400" },
-  { label: "Backend Team", icon: Users, marker: "bg-sky-400" },
-];
+const workspaceMarkers: Record<WorkspaceSummary["tone"], string> = {
+  violet: "bg-violet-400",
+  sky: "bg-sky-400",
+  emerald: "bg-emerald-400",
+  slate: "bg-slate-400",
+};
 
 function SidebarItem({
   icon: Icon,
@@ -107,10 +114,48 @@ export function AppSidebar({
   collapsed,
   mobileOpen,
   currentPage,
+  activeWorkspaceId,
   onCollapse,
   onMobileClose,
   onNavigate,
+  onWorkspaceNavigate,
 }: AppSidebarProps) {
+  const accessToken = useAppSelector((state) => state.auth.accessToken);
+  const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
+  const [workspacesLoading, setWorkspacesLoading] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState(false);
+  const [libraryCounts, setLibraryCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!accessToken) return;
+    let active = true;
+    fetchWorkspacesRequest(accessToken)
+      .then((items) => {
+        if (!active) return;
+        setWorkspaces(items);
+        setWorkspaceError(false);
+      })
+      .catch(() => active && setWorkspaceError(true))
+      .finally(() => active && setWorkspacesLoading(false));
+    return () => { active = false; };
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    let active = true;
+    Promise.allSettled([
+      fetchMyPromptsRequest(accessToken),
+      fetchSavedPromptsRequest(accessToken),
+    ]).then(([myPrompts, savedPrompts]) => {
+      if (!active) return;
+      setLibraryCounts({
+        ...(myPrompts.status === "fulfilled" ? { "My prompts": myPrompts.value.length } : {}),
+        ...(savedPrompts.status === "fulfilled" ? { Saved: savedPrompts.value.length } : {}),
+      });
+    });
+    return () => { active = false; };
+  }, [accessToken]);
+
   return (
     <>
       <button
@@ -149,6 +194,7 @@ export function AppSidebar({
               <SidebarItem
                 key={item.label}
                 {...item}
+                count={libraryCounts[item.label]}
                 active={
                   currentPage === item.label ||
                   (item.label === "Explore" &&
@@ -189,26 +235,32 @@ export function AppSidebar({
             </p>
           )}
           <div className="space-y-1">
+            {workspacesLoading && [0, 1].map((item) => (
+              <div key={item} className={cn("mx-2 h-10 animate-pulse rounded-lg bg-white/[.035]", collapsed && "mx-0")} />
+            ))}
             {workspaces.map((workspace) => (
               <button
                 type="button"
-                key={workspace.label}
-                onClick={() => onNavigate(workspace.label)}
+                key={workspace.id}
+                title={collapsed ? workspace.name : undefined}
+                onClick={() => onWorkspaceNavigate(workspace.id)}
                 className={cn(
-                  "flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-slate-400 transition-colors hover:bg-white/[.045] hover:text-slate-200",
-                  currentPage === "Workspace Management" && workspace.label === "Personal" && "bg-violet-500/10 text-violet-300",
+                  "relative flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-slate-400 outline-none transition-colors hover:bg-white/[.045] hover:text-slate-200 focus-visible:ring-2 focus-visible:ring-violet-500/60",
+                  currentPage === "Workspace Management" && workspace.id === activeWorkspaceId && "bg-violet-500/10 text-violet-300",
                   collapsed && "justify-center px-0",
                 )}
               >
-                <span className={cn("size-2 rounded-full ring-4 ring-white/[.025]", workspace.marker)} />
+                {currentPage === "Workspace Management" && workspace.id === activeWorkspaceId && <span className="absolute inset-y-2 left-0 w-0.5 rounded-r bg-violet-400" />}
+                <span className={cn("size-2 shrink-0 rounded-full ring-4 ring-white/[.025]", workspaceMarkers[workspace.tone])} />
                 {!collapsed && (
                   <>
-                    <span>{workspace.label}</span>
-                    {workspace.label === "Personal" && <ChevronDown className="ml-auto size-3.5" />}
+                    <span className="truncate">{workspace.name}</span>
+                    <span className="ml-auto text-[10px] tabular-nums text-slate-600">{workspace.prompts}</span>
                   </>
                 )}
               </button>
             ))}
+            {workspaceError && !collapsed && <p className="px-3 py-2 text-[10px] leading-4 text-rose-400/80">Unable to load workspaces.</p>}
             <SidebarItem
               icon={Plus}
               label="Create workspace"

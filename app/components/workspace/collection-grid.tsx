@@ -20,24 +20,33 @@ export function CollectionGrid({
   collections,
   onCreate,
   onAction,
+  loading = false,
+  error,
 }: {
   collections: WorkspaceCollection[];
   onCreate: () => void;
   onAction: (label: string) => void;
+  loading?: boolean;
+  error?: string | null;
 }) {
+  if (loading) {
+    return <div aria-label="Loading collections" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <div key={index} className="h-72 animate-pulse rounded-xl border border-white/[.07] bg-[#161b22]" />)}</div>;
+  }
+
   if (!collections.length) {
     return (
-      <div className="rounded-xl border border-dashed border-white/[.08] px-6 py-20 text-center">
+      <div>{error && <p role="alert" className="mb-4 rounded-lg border border-rose-400/20 bg-rose-500/[.06] px-4 py-3 text-xs text-rose-300">{error}</p>}<div className="rounded-xl border border-dashed border-white/[.08] px-6 py-20 text-center">
         <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-violet-500/[.06]"><Folder className="size-7 text-violet-400/60" /></div>
         <h3 className="mt-4 text-sm font-semibold text-slate-300">No collections created.</h3>
         <p className="mt-1 text-xs text-slate-600">Create a collection to organize this workspace&apos;s prompts.</p>
         <Button size="sm" className="mt-5" onClick={onCreate}><Plus className="size-4" /> Create Collection</Button>
-      </div>
+      </div></div>
     );
   }
 
   return (
     <div>
+      {error && <p role="alert" className="mb-4 rounded-lg border border-rose-400/20 bg-rose-500/[.06] px-4 py-3 text-xs text-rose-300">{error}</p>}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div><h2 className="text-sm font-semibold text-slate-100">Workspace Collections</h2><p className="mt-1 text-xs text-slate-600">Shared resources organized for your team.</p></div>
         <Button onClick={onCreate}><Plus className="size-4" /> Create Collection</Button>
@@ -50,7 +59,7 @@ export function CollectionGrid({
             className="group overflow-hidden rounded-xl border border-white/[.07] bg-[#161b22] transition-colors hover:border-violet-400/20"
           >
             <div className={cn("relative flex h-28 items-center justify-center overflow-hidden border-b", coverTones[collection.tone])}>
-              <Folder className="size-9" strokeWidth={1.5} />
+              {collection.coverImageUrl ? <img src={collection.coverImageUrl} alt="" className="absolute inset-0 size-full object-cover opacity-70" /> : <Folder className="size-9" strokeWidth={1.5} />}
               <span className="absolute -right-6 -top-8 size-24 rounded-full border border-current opacity-[.08]" />
               <span className="absolute -bottom-8 -left-6 size-20 rounded-full border border-current opacity-[.06]" />
               <CollectionActions name={collection.name} onAction={onAction} />

@@ -7,6 +7,7 @@ import {
   FolderPlus,
   Heart,
   Library,
+  Play,
   Share2,
   ShieldAlert,
 } from "lucide-react";
@@ -14,8 +15,8 @@ import { motion } from "framer-motion";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { publicPrompt } from "@/data/public-prompt-data";
 import { cn } from "@/lib/utils";
+import { usePublicPromptData } from "@/context/public-prompt-context";
 
 export function PublicPromptHeader({
   saved,
@@ -23,6 +24,7 @@ export function PublicPromptHeader({
   liked,
   onBack,
   onSave,
+  onUse,
   onBookmark,
   onLike,
   onFork,
@@ -35,6 +37,7 @@ export function PublicPromptHeader({
   liked: boolean;
   onBack: () => void;
   onSave: () => void;
+  onUse: () => void;
   onBookmark: () => void;
   onLike: () => void;
   onFork: () => void;
@@ -42,6 +45,7 @@ export function PublicPromptHeader({
   onAction: (label: string) => void;
   onViewProfile: () => void;
 }) {
+  const { prompt: publicPrompt } = usePublicPromptData();
   return (
     <>
       <motion.header initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
@@ -79,11 +83,15 @@ export function PublicPromptHeader({
 
       <div className="sticky top-[72px] z-20 mt-6 flex flex-wrap gap-2 rounded-2xl border border-white/[.1] bg-[#0d1117]/90 p-3 shadow-[0_12px_38px_rgba(0,0,0,.25)] backdrop-blur-xl">
         <Button
-          className={cn("bg-emerald-500 text-[#07120b] hover:bg-emerald-400", saved && "bg-emerald-400")}
+          variant="secondary"
+          className={cn(saved && "border-emerald-500/25 text-emerald-300")}
           onClick={onSave}
         >
           {saved ? <CheckCircle2 className="size-4" /> : <Library className="size-4" />}
           {saved ? "Saved to Library" : "Save to My Library"}
+        </Button>
+        <Button className="bg-emerald-500 text-[#07120b] hover:bg-emerald-400" onClick={onUse}>
+          <Play className="size-4 fill-current" /> Use prompt
         </Button>
         <Button variant="secondary" onClick={onFork}><GitFork className="size-4" /> Fork prompt</Button>
         <Button variant="secondary" onClick={onCopy}><Copy className="size-4" /> Copy prompt</Button>

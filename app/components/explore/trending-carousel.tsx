@@ -4,7 +4,6 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PromptCover } from "@/components/explore/prompt-cover";
-import { savedKeyForTitle } from "@/data/saved-data";
 import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import { formatCompact } from "@/lib/utils";
 import type { ExplorePrompt } from "@/types";
@@ -43,7 +42,7 @@ function FeaturedPromptCard({
   index: number;
   onOpen: () => void;
 }) {
-  const savedId = savedKeyForTitle(prompt.title);
+  const savedId = String(prompt.id);
   const { isSaved, toggleSaved } = useSavedPrompts();
   const saved = isSaved(savedId);
 

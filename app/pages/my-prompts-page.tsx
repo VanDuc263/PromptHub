@@ -1,33 +1,76 @@
 import {
+  AlertTriangle,
   ChevronDown,
   FileText,
   Filter,
   LayoutGrid,
   List,
   Plus,
+  RefreshCw,
   Search,
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PromptListItem } from "@/components/prompts/prompt-list-item";
 import { Button } from "@/components/ui/button";
-import { libraryPrompts } from "@/data/mock-data";
 import { cn } from "@/lib/utils";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchMyPrompts, updatePromptVisibility } from "@/store/my-prompts-slice";
+import type { LibraryPrompt } from "@/types";
 
-const categoryFilters = ["Programming", "Marketing", "English"] as const;
 const stateFilters = ["Private", "Public", "Draft"] as const;
+
+const accents: Record<string, string> = {
+  Programming: "bg-cyan-400",
+  Marketing: "bg-fuchsia-400",
+  English: "bg-amber-400",
+  Other: "bg-violet-400",
+};
+
+function relativeTime(value: string) {
+  const elapsed = Date.now() - new Date(value).getTime();
+  if (!Number.isFinite(elapsed) || elapsed < 60_000) return "just now";
+  const minutes = Math.floor(elapsed / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return days < 30 ? `${days}d ago` : new Date(value).toLocaleDateString();
+}
 
 export function MyPromptsPage({
   onAction,
   onCreatePrompt,
+  onOpenPrompt,
+  onEditPrompt,
 }: {
   onAction: (label: string) => void;
   onCreatePrompt: () => void;
+  onOpenPrompt: (promptId: string) => void;
+  onEditPrompt: (promptId: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [sortNewest, setSortNewest] = useState(true);
+  const dispatch = useAppDispatch();
+  const requestedRef = useRef(false);
+  const { prompts: apiPrompts, status, error } = useAppSelector((state) => state.myPrompts);
+  const prompts = useMemo<LibraryPrompt[]>(() => apiPrompts.map((prompt) => ({
+    ...prompt,
+    updatedAt: relativeTime(prompt.updatedAt),
+    accent: accents[prompt.category] ?? accents.Other,
+  })), [apiPrompts]);
+  const categoryFilters = useMemo(
+    () => [...new Set(prompts.map((prompt) => prompt.category))],
+    [prompts],
+  );
+
+  useEffect(() => {
+    if (requestedRef.current || status !== "idle") return;
+    requestedRef.current = true;
+    void dispatch(fetchMyPrompts());
+  }, [dispatch, status]);
 
   const toggleFilter = (filter: string) => {
     setActiveFilters((filters) =>
@@ -46,7 +89,7 @@ export function MyPromptsPage({
       stateFilters.includes(item as (typeof stateFilters)[number]),
     );
 
-    const results = libraryPrompts.filter((prompt) => {
+    const results = prompts.filter((prompt) => {
       const matchesQuery =
         !normalizedQuery ||
         `${prompt.title} ${prompt.description} ${prompt.tags.join(" ")}`
@@ -63,7 +106,7 @@ export function MyPromptsPage({
     });
 
     return sortNewest ? results : [...results].reverse();
-  }, [activeFilters, query, sortNewest]);
+  }, [activeFilters, categoryFilters, prompts, query, sortNewest]);
 
   return (
     <>
@@ -169,22 +212,36 @@ export function MyPromptsPage({
           )}
         </div>
 
+        {status === "failed" && (
+          <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-red-400/15 bg-red-500/[.05] p-4 text-sm text-red-200">
+            <span className="flex items-center gap-2"><AlertTriangle className="size-4" />{error}</span>
+            <Button variant="secondary" size="sm" onClick={() => void dispatch(fetchMyPrompts())}>
+              <RefreshCw className="size-3.5" /> Retry
+            </Button>
+          </div>
+        )}
+
         <div className="mt-3 space-y-2.5">
           <div className="hidden grid-cols-[minmax(0,1fr)_130px_100px_145px_40px] gap-5 px-5 pb-1 text-[10px] font-semibold uppercase tracking-[.12em] text-slate-700 md:grid">
             <span>Prompt</span><span>Visibility</span><span>Version</span><span>Activity</span><span />
           </div>
-          {filteredPrompts.map((prompt) => (
-            <PromptListItem key={prompt.id} prompt={prompt} onAction={onAction} />
+          {status === "loading" && Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="h-28 animate-pulse rounded-xl border border-white/[.06] bg-white/[.025]" />
+          ))}
+          {status === "succeeded" && filteredPrompts.map((prompt) => (
+            <PromptListItem key={prompt.id} prompt={prompt} onAction={onAction} onOpen={onOpenPrompt} onEdit={onEditPrompt} onVisibilityChange={(promptId, visibility) => { void dispatch(updatePromptVisibility({ promptId, visibility })).unwrap().then(() => onAction(`Prompt visibility changed to ${visibility}`)).catch(() => undefined); }} />
           ))}
         </div>
 
-        {filteredPrompts.length === 0 && (
+        {status === "succeeded" && filteredPrompts.length === 0 && (
           <div className="mt-3 rounded-xl border border-dashed border-white/[.09] py-16 text-center">
             <span className="mx-auto grid size-10 place-items-center rounded-lg bg-white/[.035] text-slate-600">
               <FileText className="size-[18px]" />
             </span>
             <h2 className="mt-4 text-sm font-medium text-slate-300">No prompts found</h2>
-            <p className="mt-1.5 text-xs text-slate-600">Try adjusting your search or filters.</p>
+            <p className="mt-1.5 text-xs text-slate-600">
+              {prompts.length ? "Try adjusting your search or filters." : "Create your first prompt to start building your library."}
+            </p>
             <Button variant="secondary" size="sm" className="mt-5" onClick={() => { setQuery(""); setActiveFilters([]); }}>
               Reset filters
             </Button>
@@ -193,7 +250,7 @@ export function MyPromptsPage({
 
         <footer className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-white/[.06] py-5 text-[11px] text-slate-700 sm:flex-row">
           <p>© 2026 PromptHub. Crafted for better prompting.</p>
-          <p>{libraryPrompts.length} prompts in your personal workspace</p>
+          <p>{prompts.length} prompts in your personal workspace</p>
         </footer>
       </div>
     </>

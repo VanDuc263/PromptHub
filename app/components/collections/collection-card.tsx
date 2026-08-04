@@ -37,6 +37,7 @@ export function CollectionCard({
   onDropPrompt: (promptId: string) => void;
 }) {
   const VisibilityIcon = visibilityIcons[collection.visibility];
+  const coverImage = collection.localCoverImageUrl ?? collection.coverImageUrl;
   return (
     <motion.article
       layout
@@ -51,6 +52,8 @@ export function CollectionCard({
       className={cn("group overflow-hidden rounded-2xl border border-white/[.07] bg-[#161b22] shadow-lg shadow-black/5 transition hover:border-emerald-500/20 hover:shadow-black/25", list && "sm:grid sm:grid-cols-[220px_minmax(0,1fr)]")}
     >
       <div className={cn("relative h-32 overflow-hidden border-b border-white/[.06] bg-gradient-to-br", tones[collection.color] ?? tones.emerald, list && "sm:h-full sm:min-h-52 sm:border-b-0 sm:border-r")}>
+        {coverImage && <img src={coverImage} alt="" className="absolute inset-0 size-full object-cover" />}
+        {coverImage && <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117]/75 via-transparent to-black/10" />}
         <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_center,currentColor_1px,transparent_1px)] [background-size:18px_18px]" />
         <div className="absolute bottom-4 left-4 flex -space-x-3">
           {collection.promptIds.slice(0, 4).map((id, index) => <span key={id} className="grid size-9 place-items-center rounded-lg border-2 border-[#161b22] bg-[#0d1117] font-mono text-[9px] text-slate-400">{["API", "CR", "SQL", "AI"][index]}</span>)}

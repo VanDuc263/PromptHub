@@ -1,15 +1,18 @@
-import { Activity, Folder, MessageSquareText, Users } from "lucide-react";
+import { Folder, MessageSquareText, Users } from "lucide-react";
 import { motion } from "framer-motion";
-import { overviewMetrics } from "@/data/workspace-data";
 
 const metricIcons = {
   members: Users,
   prompts: MessageSquareText,
   collections: Folder,
-  usage: Activity,
 };
 
-export function WorkspaceOverview() {
+export function WorkspaceOverview({ overview }: { overview?: { members: number; prompts: number; collections: number } }) {
+  const metrics = [
+    { label: "Members", value: overview?.members ?? 0, description: "Active collaborators", icon: "members" as const },
+    { label: "Prompts", value: overview?.prompts ?? 0, description: "Across this workspace", icon: "prompts" as const },
+    { label: "Collections", value: overview?.collections ?? 0, description: "Shared and private", icon: "collections" as const },
+  ];
   return (
     <section aria-labelledby="workspace-overview-heading">
       <div className="mb-3 flex items-center justify-between">
@@ -19,8 +22,8 @@ export function WorkspaceOverview() {
         </div>
         <span className="text-[10px] text-slate-600">Updated just now</span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {overviewMetrics.map((metric, index) => {
+      <div className="grid gap-3 sm:grid-cols-3">
+        {metrics.map((metric, index) => {
           const Icon = metricIcons[metric.icon];
           return (
             <motion.article
@@ -35,9 +38,8 @@ export function WorkspaceOverview() {
                 <span className="grid size-8 place-items-center rounded-lg border border-violet-400/15 bg-violet-500/[.07]">
                   <Icon className="size-4 text-violet-400" />
                 </span>
-                <span className="text-[10px] font-medium text-emerald-400/80">{metric.trend}</span>
               </div>
-              <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-100">{metric.value}</p>
+              <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-100">{overview ? metric.value : "—"}</p>
               <p className="mt-1 text-xs font-medium text-slate-400">{metric.label}</p>
               <p className="mt-1 text-[10px] text-slate-600">{metric.description}</p>
             </motion.article>

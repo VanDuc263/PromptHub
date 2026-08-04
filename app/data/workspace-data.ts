@@ -6,6 +6,9 @@ export type ActivityKind = "prompt" | "member" | "fork" | "version" | "collectio
 export interface WorkspaceSummary {
   id: string;
   name: string;
+  slug: string;
+  personal: boolean;
+  avatarUrl?: string | null;
   initials: string;
   role: WorkspaceRole;
   prompts: number;
@@ -17,12 +20,17 @@ export interface WorkspaceSummary {
 
 export interface WorkspaceMember {
   id: string;
+  userId?: string;
   name: string;
   initials: string;
   email: string;
+  username?: string;
+  avatarUrl?: string | null;
   role: MemberRole;
   status: MemberStatus;
   joined: string;
+  lastActive?: string;
+  currentUser?: boolean;
 }
 
 export interface PendingInvitation {
@@ -36,6 +44,7 @@ export interface WorkspaceCollection {
   id: string;
   name: string;
   description: string;
+  coverImageUrl?: string | null;
   prompts: number;
   collaborators: string[];
   visibility: "Private" | "Workspace" | "Public";
@@ -53,6 +62,7 @@ export interface WorkspaceActivity {
   period: "Today" | "This Week" | "This Month";
   kind: ActivityKind;
   mine?: boolean;
+  detail?: string;
 }
 
 export interface WorkspaceApiKey {
@@ -68,6 +78,8 @@ export const workspaces: WorkspaceSummary[] = [
   {
     id: "personal",
     name: "Personal",
+    slug: "personal",
+    personal: true,
     initials: "VD",
     role: "Owner",
     prompts: 124,
@@ -78,6 +90,8 @@ export const workspaces: WorkspaceSummary[] = [
   {
     id: "backend",
     name: "Backend Team",
+    slug: "backend-team",
+    personal: false,
     initials: "BT",
     role: "Admin",
     prompts: 48,
@@ -89,6 +103,8 @@ export const workspaces: WorkspaceSummary[] = [
   {
     id: "research",
     name: "AI Research",
+    slug: "ai-research",
+    personal: false,
     initials: "AR",
     role: "Member",
     prompts: 58,
@@ -100,6 +116,8 @@ export const workspaces: WorkspaceSummary[] = [
   {
     id: "design",
     name: "Design Team",
+    slug: "design-team",
+    personal: false,
     initials: "DT",
     role: "Viewer",
     prompts: 14,

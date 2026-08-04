@@ -8,6 +8,7 @@ import {
   Download,
   Edit3,
   Eye,
+  FileCode2,
   FolderPlus,
   GitFork,
   Globe2,
@@ -31,6 +32,10 @@ import { savedPromptCatalog } from "@/data/saved-data";
 import { useCollections } from "@/hooks/use-collections";
 import { useSavedPrompts } from "@/hooks/use-saved-prompts";
 import { cn, formatCompact } from "@/lib/utils";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchExplorePrompts } from "@/store/explore-slice";
+import { fetchMyPrompts } from "@/store/my-prompts-slice";
+import { fetchSavedPrompts } from "@/store/saved-prompts-slice";
 import type { PromptCollection, SavedPrompt } from "@/types";
 
 const tabs = ["Overview", "Prompts", "Activity", "Members", "Settings"];
@@ -61,17 +66,54 @@ export function CollectionDetail({
   onDelete: () => void;
   onAction: (label: string) => void;
 }) {
+  const coverImage = collection.localCoverImageUrl ?? collection.coverImageUrl;
   const { removePrompt, toggleFollow, updateCollection } = useCollections();
+  const dispatch = useAppDispatch();
+  const myPromptsState = useAppSelector((state) => state.myPrompts);
+  const savedPromptsState = useAppSelector((state) => state.savedPrompts);
+  const exploreState = useAppSelector((state) => state.explore);
   const [tab, setTab] = useState("Overview");
   const [addOpen, setAddOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [draggedId, setDraggedId] = useState<string | null>(null);
-  const allPrompts = useMemo(() => savedPromptCatalog.filter((prompt) => collection.promptIds.includes(prompt.id)), [collection.promptIds]);
+  const promptCatalog = useMemo(() => {
+    const catalog = new Map<string, SavedPrompt>(savedPromptCatalog.map((prompt) => [prompt.id, prompt]));
+    exploreState.prompts.forEach((prompt, index) => catalog.set(prompt.id, {
+      id: prompt.id, title: prompt.title, description: prompt.description, author: prompt.author,
+      authorInitials: prompt.authorInitials, category: prompt.category, tags: prompt.tags, models: prompt.models,
+      version: "v1", rating: prompt.rating, copies: prompt.copies, forks: 0,
+      updatedAt: prompt.publishedAt ?? "Recently", savedAt: "", savedOrder: 2_000 + index,
+      visibility: "Public", language: "English", icon: FileCode2, accent: "bg-sky-500/10 text-sky-300",
+    }));
+    savedPromptsState.prompts.forEach((prompt, index) => catalog.set(prompt.id, {
+      ...prompt, savedOrder: 1_000 + index, icon: FileCode2, accent: "bg-violet-500/10 text-violet-300",
+    }));
+    myPromptsState.prompts.forEach((prompt, index) => catalog.set(prompt.id, {
+      id: prompt.id, title: prompt.title, description: prompt.description, author: prompt.author,
+      authorInitials: prompt.author.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase(),
+      category: prompt.category, tags: prompt.tags, models: [], version: prompt.version, rating: 0,
+      copies: prompt.uses, forks: 0, updatedAt: prompt.updatedAt, savedAt: "", savedOrder: index,
+      visibility: prompt.visibility === "Public" ? "Public" : "Private", language: "English",
+      icon: FileCode2, accent: "bg-emerald-500/10 text-emerald-300",
+    }));
+    return catalog;
+  }, [exploreState.prompts, myPromptsState.prompts, savedPromptsState.prompts]);
+  const allPrompts = useMemo(() => collection.promptIds.flatMap((id) => {
+    const prompt = promptCatalog.get(id);
+    return prompt ? [prompt] : [];
+  }), [collection.promptIds, promptCatalog]);
+  const totalCopies = useMemo(() => allPrompts.reduce((total, prompt) => total + prompt.copies, 0), [allPrompts]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setLoading(false), 450);
     return () => window.clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    if (myPromptsState.status === "idle") void dispatch(fetchMyPrompts());
+    if (savedPromptsState.status === "idle") void dispatch(fetchSavedPrompts());
+    if (exploreState.status === "idle") void dispatch(fetchExplorePrompts());
+  }, [dispatch, exploreState.status, myPromptsState.status, savedPromptsState.status]);
 
   if (loading) return <DetailSkeleton />;
 
@@ -97,6 +139,8 @@ export function CollectionDetail({
 
         <section className="mt-4 overflow-hidden rounded-2xl border border-white/[.07] bg-[#161b22]">
           <div className="relative h-36 bg-gradient-to-br from-violet-500/25 via-fuchsia-500/[.07] to-transparent">
+            {coverImage && <img src={coverImage} alt="" className="absolute inset-0 size-full object-cover" />}
+            {coverImage && <div className="absolute inset-0 bg-gradient-to-t from-[#161b22]/70 via-transparent to-black/10" />}
             <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_center,rgba(167,139,250,.55)_1px,transparent_1px)] [background-size:20px_20px]" />
           </div>
           <div className="p-5 sm:p-6">
@@ -117,14 +161,14 @@ export function CollectionDetail({
             <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-slate-600">
               <span className="inline-flex items-center gap-2"><Avatar initials={collection.ownerInitials} className="size-7 text-[8px]" /><strong className="font-medium text-slate-300">{collection.owner}</strong></span>
               <VisibilityBadge visibility={collection.visibility} />
-              <span>28 prompts</span><span>{formatCompact(collection.followers)} followers</span><span>Created {collection.createdAt}</span><span>Updated {collection.updatedAt.toLowerCase()}</span>
+              <span>{collection.promptIds.length} prompts</span><span>{formatCompact(collection.followers)} followers</span><span>Created {collection.createdAt}</span><span>Updated {collection.updatedAt.toLowerCase()}</span>
             </div>
             <div className="mt-4 flex flex-wrap gap-1.5">{collection.tags.map((tag) => <Badge key={tag} className="border-violet-500/15 bg-violet-500/[.05] text-violet-300">{tag}</Badge>)}</div>
           </div>
         </section>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {[["Prompts", "28", FolderPlus], ["Followers", "182", Users], ["Views", "3.8K", Eye], ["Copies", "12.4K", Copy]].map(([label, value, Icon]) => (
+          {[["Prompts", String(collection.promptIds.length), FolderPlus], ["Followers", formatCompact(collection.followers), Users], ["Views", formatCompact(collection.views), Eye], ["Copies", formatCompact(totalCopies), Copy]].map(([label, value, Icon]) => (
             <div key={label as string} className="rounded-2xl border border-white/[.07] bg-[#161b22] p-4"><div className="flex items-center justify-between"><p className="text-[10px] uppercase tracking-[.12em] text-slate-600">{label as string}</p><Icon className="size-4 text-violet-400" /></div><p className="mt-3 text-2xl font-semibold text-slate-100">{value as string}</p></div>
           ))}
         </div>
@@ -135,7 +179,7 @@ export function CollectionDetail({
 
         <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
           <main className="min-w-0">
-            {tab === "Overview" && <Overview prompts={allPrompts} onAction={onAction} />}
+            {tab === "Overview" && <Overview description={collection.description} prompts={allPrompts} onAction={onAction} />}
             {tab === "Prompts" && <PromptsTab prompts={allPrompts} owner onRemove={(id) => removePrompt(collection.id, id)} onAction={onAction} onDragStart={setDraggedId} onDrop={reorderPrompt} />}
             {tab === "Activity" && <ActivityTab />}
             {tab === "Members" && <MembersTab />}
@@ -147,7 +191,7 @@ export function CollectionDetail({
 
       <Button className="fixed bottom-6 right-6 z-30 bg-emerald-500 text-[#07120b] shadow-[0_14px_40px_rgba(34,197,94,.22)] hover:bg-emerald-400 lg:bottom-8 lg:right-8" onClick={() => setAddOpen(true)}><FolderPlus className="size-4" /> Add Prompt</Button>
       <div className="fixed inset-x-0 bottom-0 z-20 flex gap-2 border-t border-white/[.08] bg-[#0d1117]/95 p-3 backdrop-blur-xl lg:hidden"><Button variant="secondary" className="flex-1" onClick={onShare}><Share2 className="size-4" /> Share</Button><Button className="flex-1 bg-emerald-500 text-[#07120b] hover:bg-emerald-400" onClick={() => setAddOpen(true)}><FolderPlus className="size-4" /> Add Prompt</Button></div>
-      <AddPromptsDialog open={addOpen} onOpenChange={setAddOpen} collectionId={collection.id} />
+      <AddPromptsDialog open={addOpen} onOpenChange={setAddOpen} collectionId={collection.id} onDone={(count) => onAction(`${count} prompt${count === 1 ? "" : "s"} added to collection`)} />
     </>
   );
 }
@@ -161,9 +205,9 @@ function VisibilityBadge({ visibility }: { visibility: PromptCollection["visibil
   return <Badge><Icon className="mr-1 size-3" />{visibility}</Badge>;
 }
 
-function Overview({ prompts, onAction }: { prompts: SavedPrompt[]; onAction: (label: string) => void }) {
+function Overview({ description, prompts, onAction }: { description: string; prompts: SavedPrompt[]; onAction: (label: string) => void }) {
   return <div className="space-y-6">
-    <Panel title="Collection description"><p className="text-sm leading-7 text-slate-500">This toolkit covers the full lifecycle of modern Java backend development—from API contracts and service boundaries to secure implementation, performance reviews, and production readiness. Every prompt includes clear inputs and actionable output formats.</p></Panel>
+    <Panel title="Collection description"><p className="text-sm leading-7 text-slate-500">{description}</p></Panel>
     <PromptSection title="Pinned prompts" subtitle="The essential starting points for this toolkit." prompts={prompts.slice(0, 2)} onAction={onAction} featured />
     <PromptSection title="Newest prompts" subtitle="Recently added workflows." prompts={prompts.slice().reverse().slice(0, 3)} onAction={onAction} />
     <PromptSection title="Popular prompts" subtitle="Most-used prompts across the community." prompts={prompts.slice(0, 3)} onAction={onAction} />
@@ -222,7 +266,7 @@ function SettingToggle({ label, value, onChange }: { label: string; value: boole
 }
 
 function DetailSidebar({ collection, onShare, onDuplicate, onAction }: { collection: PromptCollection; onShare: () => void; onDuplicate: () => void; onAction: (label: string) => void }) {
-  return <aside className="space-y-3"><SideCard title="Collection Information"><Info label="Owner" value={collection.owner} /><Info label="Visibility" value={collection.visibility} /><Info label="Created" value={collection.createdAt} /><Info label="Updated" value={collection.updatedAt} /><Info label="Prompt Count" value="28" /><Info label="Followers" value="182" /><Info label="Views" value="3.8K" /><Info label="Language" value="English" /><div className="mt-3 flex flex-wrap gap-1">{models.map((model) => <Badge key={model} className="py-0.5 text-[8px]">{model}</Badge>)}</div></SideCard><SideCard title="Quick Actions"><div className="space-y-1"><Button variant="ghost" className="w-full justify-start" onClick={onShare}><Share2 className="size-4" /> Share</Button><Button variant="ghost" className="w-full justify-start" onClick={onDuplicate}><Copy className="size-4" /> Duplicate</Button><Button variant="ghost" className="w-full justify-start" onClick={() => onAction("Collection exported")}><Download className="size-4" /> Export</Button></div></SideCard><SideCard title="Related Collections">{["Java Interview", "Spring Boot", "Microservices", "REST API"].map((item) => <button type="button" key={item} className="block w-full rounded-lg px-2 py-2 text-left text-[11px] text-slate-600 hover:bg-white/[.04] hover:text-violet-300">{item}</button>)}</SideCard><SideCard title="Popular Tags"><div className="flex flex-wrap gap-1">{["Java", "Spring", "Backend", "Architecture"].map((item) => <Badge key={item}>{item}</Badge>)}</div></SideCard></aside>;
+  return <aside className="space-y-3"><SideCard title="Collection Information"><Info label="Owner" value={collection.owner} /><Info label="Visibility" value={collection.visibility} /><Info label="Created" value={collection.createdAt} /><Info label="Updated" value={collection.updatedAt} /><Info label="Prompt Count" value={String(collection.promptIds.length)} /><Info label="Followers" value={formatCompact(collection.followers)} /><Info label="Views" value={formatCompact(collection.views)} /><Info label="Language" value="English" /><div className="mt-3 flex flex-wrap gap-1">{models.map((model) => <Badge key={model} className="py-0.5 text-[8px]">{model}</Badge>)}</div></SideCard><SideCard title="Quick Actions"><div className="space-y-1"><Button variant="ghost" className="w-full justify-start" onClick={onShare}><Share2 className="size-4" /> Share</Button><Button variant="ghost" className="w-full justify-start" onClick={onDuplicate}><Copy className="size-4" /> Duplicate</Button><Button variant="ghost" className="w-full justify-start" onClick={() => onAction("Collection exported")}><Download className="size-4" /> Export</Button></div></SideCard><SideCard title="Related Collections">{["Java Interview", "Spring Boot", "Microservices", "REST API"].map((item) => <button type="button" key={item} className="block w-full rounded-lg px-2 py-2 text-left text-[11px] text-slate-600 hover:bg-white/[.04] hover:text-violet-300">{item}</button>)}</SideCard><SideCard title="Popular Tags"><div className="flex flex-wrap gap-1">{collection.tags.map((item) => <Badge key={item}>{item}</Badge>)}</div></SideCard></aside>;
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) { return <section className="rounded-2xl border border-white/[.07] bg-[#161b22] p-5"><h2 className="text-sm font-semibold text-slate-300">{title}</h2><div className="mt-3">{children}</div></section>; }

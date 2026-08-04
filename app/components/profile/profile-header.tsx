@@ -22,7 +22,7 @@ import { motion } from "framer-motion";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { creatorProfile } from "@/data/profile-data";
+import { creatorProfile, type CreatorProfileData } from "@/data/profile-data";
 
 export function ProfileHeader({
   isOwner,
@@ -34,6 +34,7 @@ export function ProfileHeader({
   onEdit,
   onShare,
   onAction,
+  profile = creatorProfile,
 }: {
   isOwner: boolean;
   following: boolean;
@@ -44,6 +45,7 @@ export function ProfileHeader({
   onEdit: () => void;
   onShare: () => void;
   onAction: (label: string) => void;
+  profile?: CreatorProfileData;
 }) {
   return (
     <motion.header
@@ -55,15 +57,15 @@ export function ProfileHeader({
 
       <div className="px-5 pb-6 sm:px-7 pt-20">
         <div className="-mt-12 flex flex-col gap-5 lg:flex-row lg:items-start">
-          <Avatar initials={creatorProfile.initials} className="size-24 border-4 border-[#161b22] bg-violet-500/20 text-xl text-violet-200 shadow-xl" />
+          {profile.avatarUrl ? <img src={profile.avatarUrl} alt={profile.name} className="size-24 rounded-full border-4 border-[#161b22] bg-violet-500/20 object-cover shadow-xl" /> : <Avatar initials={profile.initials} className="size-24 border-4 border-[#161b22] bg-violet-500/20 text-xl text-violet-200 shadow-xl" />}
           <div className="min-w-0 flex-1 pt-1 lg:pt-14">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-[-.03em] text-slate-50">{creatorProfile.name}</h1>
-              <CheckCircle2 className="size-[17px] fill-emerald-400/10 text-emerald-400" aria-label="Verified creator" />
-              <Badge className="border-emerald-500/15 bg-emerald-500/[.05] text-emerald-300">Verified Creator</Badge>
+              <h1 className="text-2xl font-bold tracking-[-.03em] text-slate-50">{profile.name}</h1>
+              {profile.verified && <CheckCircle2 className="size-[17px] fill-emerald-400/10 text-emerald-400" aria-label="Verified creator" />}
+              {profile.verified && <Badge className="border-emerald-500/15 bg-emerald-500/[.05] text-emerald-300">Verified Creator</Badge>}
             </div>
-            <p className="mt-1 text-xs text-slate-600">{creatorProfile.username}</p>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{creatorProfile.bio}</p>
+            <p className="mt-1 text-xs text-slate-600">{profile.username}</p>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">{profile.bio}</p>
           </div>
 
           <div className="flex flex-wrap gap-2 lg:pt-14">
@@ -103,10 +105,10 @@ export function ProfileHeader({
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-white/[.06] pt-5 text-[10px] text-slate-600">
-          <span className="inline-flex items-center gap-1.5"><MapPin className="size-3.5" /> {creatorProfile.location}</span>
-          <a href={`https://${creatorProfile.website}`} className="inline-flex items-center gap-1.5 transition hover:text-violet-300"><Globe2 className="size-3.5" /> {creatorProfile.website}</a>
-          <span>{creatorProfile.joinedAt}</span>
-          <span className="inline-flex items-center gap-1.5 text-emerald-400"><span className="size-1.5 rounded-full bg-emerald-400" /> {creatorProfile.lastActive}</span>
+          {profile.location && <span className="inline-flex items-center gap-1.5"><MapPin className="size-3.5" /> {profile.location}</span>}
+          {profile.website && <a href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`} className="inline-flex items-center gap-1.5 transition hover:text-violet-300"><Globe2 className="size-3.5" /> {profile.website.replace(/^https?:\/\//, "")}</a>}
+          <span>{profile.joinedAt}</span>
+          <span className="inline-flex items-center gap-1.5 text-emerald-400"><span className="size-1.5 rounded-full bg-emerald-400" /> {profile.lastActive}</span>
           <div className="flex gap-1 lg:ml-auto">
             <SocialButton icon={Github} label="GitHub" onClick={() => onAction("GitHub profile opened")} />
             <SocialButton icon={Link2} label="Website" onClick={() => onAction("Personal website opened")} />
@@ -114,7 +116,7 @@ export function ProfileHeader({
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {creatorProfile.skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}
+          {profile.skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}
         </div>
       </div>
     </motion.header>

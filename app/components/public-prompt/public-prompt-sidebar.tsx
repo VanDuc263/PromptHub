@@ -13,21 +13,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   authorStats,
-  publicPrompt,
-  publicStats,
   relatedPrompts,
 } from "@/data/public-prompt-data";
 import { formatCompact } from "@/lib/utils";
+import { usePublicPromptData } from "@/context/public-prompt-context";
+import { PersonalPromptReview } from "@/components/prompt-detail/prompt-feedback-sections";
 
 export function PublicPromptSidebar({
-  userRating,
-  onRatingChange,
+  promptId,
   onAction,
 }: {
-  userRating: number;
-  onRatingChange: (rating: number) => void;
+  promptId: string | null;
   onAction: (label: string) => void;
 }) {
+  const { prompt: publicPrompt, stats: publicStats } = usePublicPromptData();
   return (
     <aside className="space-y-4 xl:sticky xl:top-[152px] xl:self-start">
       <Panel>
@@ -63,7 +62,7 @@ export function PublicPromptSidebar({
         <div className="flex flex-wrap gap-1.5">{publicPrompt.tags.map((tag) => <Badge key={tag}>{tag}</Badge>)}</div>
       </Panel>
 
-      <RatingPanel userRating={userRating} onRatingChange={onRatingChange} />
+      {promptId && <PersonalPromptReview promptId={promptId} onAction={onAction} />}
 
       <Panel title="Related prompts">
         {relatedPrompts.length ? (
@@ -84,55 +83,6 @@ export function PublicPromptSidebar({
       </Panel>
     </aside>
   );
-}
-
-function RatingPanel({ userRating, onRatingChange }: { userRating: number; onRatingChange: (rating: number) => void }) {
-  const distribution = [
-    { stars: 5, value: 76 },
-    { stars: 4, value: 18 },
-    { stars: 3, value: 4 },
-    { stars: 2, value: 1 },
-    { stars: 1, value: 1 },
-  ];
-  return (
-    <Panel title="Community rating">
-      <div className="flex items-end gap-2">
-        <span className="text-3xl font-semibold tracking-[-.04em] text-slate-100">4.8</span>
-        <span className="mb-1 text-[9px] text-slate-700">846 ratings</span>
-      </div>
-      <div className="mt-4 space-y-1.5">
-        {distribution.map((item) => (
-          <div key={item.stars} className="flex items-center gap-2">
-            <span className="w-3 text-[8px] text-slate-600">{item.stars}</span>
-            <Star className="size-2.5 fill-amber-400 text-amber-400" />
-            <div className="h-1 flex-1 overflow-hidden rounded bg-white/[.05]">
-              <div className={`h-full rounded bg-amber-400/70 ${ratingWidth(item.value)}`} />
-            </div>
-            <span className="w-5 text-right text-[8px] text-slate-700">{item.value}%</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 border-t border-white/[.06] pt-4">
-        <p className="text-[9px] text-slate-600">Rate this prompt</p>
-        <div className="mt-2 flex gap-1">
-          {[1, 2, 3, 4, 5].map((rating) => (
-            <button type="button" key={rating} onClick={() => onRatingChange(rating)} aria-label={`Rate ${rating} stars`} className="text-slate-700 transition hover:scale-110 hover:text-amber-400">
-              <Star className={`size-5 ${rating <= userRating ? "fill-amber-400 text-amber-400" : ""}`} />
-            </button>
-          ))}
-        </div>
-        {userRating > 0 && <p className="mt-2 text-[9px] text-emerald-400">Thanks for your {userRating}-star rating.</p>}
-      </div>
-    </Panel>
-  );
-}
-
-function ratingWidth(value: number) {
-  if (value >= 75) return "w-3/4";
-  if (value >= 50) return "w-1/2";
-  if (value >= 25) return "w-1/4";
-  if (value >= 10) return "w-[12%]";
-  return "w-[4%]";
 }
 
 function Panel({ title, children }: { title?: string; children: React.ReactNode }) {

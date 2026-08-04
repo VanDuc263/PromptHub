@@ -15,6 +15,7 @@ export function PromptDetailPage({
   newVersionCreated = false,
   onCreateVersion,
   onCompareVersion,
+  promptId,
 }: {
   onBack: () => void;
   onEdit: () => void;
@@ -23,6 +24,7 @@ export function PromptDetailPage({
   newVersionCreated?: boolean;
   onCreateVersion: () => void;
   onCompareVersion: (version: string) => void;
+  promptId: string | null;
 }) {
   const { isSaved, toggleSaved } = useSavedPrompts();
   const saved = isSaved("java-code-reviewer");
@@ -67,6 +69,7 @@ export function PromptDetailPage({
               onCreateVersion={onCreateVersion}
               onCompareVersion={onCompareVersion}
               newVersionCreated={newVersionCreated}
+              promptId={promptId}
             />
           </main>
           <InformationPanel onEdit={onEdit} onAction={onAction} />

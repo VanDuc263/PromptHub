@@ -3,12 +3,16 @@ import type { PromptCollection } from "@/types";
 
 export interface CollectionsContextValue {
   collections: PromptCollection[];
-  createCollection: (collection: Omit<PromptCollection, "id" | "createdAt" | "updatedAt" | "promptIds" | "followers" | "views">) => string;
+  status: "idle" | "loading" | "succeeded" | "failed";
+  createStatus: "idle" | "loading" | "failed";
+  error: string | null;
+  reload: () => void;
+  createCollection: (collection: Omit<PromptCollection, "id" | "createdAt" | "updatedAt" | "promptIds" | "followers" | "views">) => Promise<string | null>;
   updateCollection: (id: string, patch: Partial<PromptCollection>) => void;
   deleteCollection: (id: string) => void;
   duplicateCollection: (id: string) => string | null;
-  addPrompts: (collectionIds: string[], promptIds: string[]) => void;
-  removePrompt: (collectionId: string, promptId: string) => void;
+  addPrompts: (collectionIds: string[], promptIds: string[]) => Promise<boolean>;
+  removePrompt: (collectionId: string, promptId: string) => Promise<boolean>;
   toggleFollow: (id: string) => void;
 }
 

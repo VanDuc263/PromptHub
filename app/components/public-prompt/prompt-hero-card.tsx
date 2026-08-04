@@ -10,12 +10,10 @@ import {
 import { motion } from "framer-motion";
 import { PromptCover } from "@/components/explore/prompt-cover";
 import { Badge } from "@/components/ui/badge";
-import { communityPrompts } from "@/data/explore-data";
-import { publicPrompt } from "@/data/public-prompt-data";
-
-const explorePrompt = communityPrompts.find((prompt) => prompt.title === publicPrompt.title)!;
+import { usePublicPromptData } from "@/context/public-prompt-context";
 
 export function PromptHeroCard() {
+  const { prompt: publicPrompt, explorePrompt } = usePublicPromptData();
   const metadata = [
     { label: "Difficulty", value: publicPrompt.difficulty, icon: Gauge },
     { label: "Estimated tokens", value: publicPrompt.estimatedTokens, icon: Braces },

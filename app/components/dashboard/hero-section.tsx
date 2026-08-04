@@ -1,7 +1,15 @@
 import { ArrowRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function HeroSection({ onAction }: { onAction: (label: string) => void }) {
+export function HeroSection({
+  name,
+  onCreatePrompt,
+  onExplore,
+}: {
+  name?: string;
+  onCreatePrompt: () => void;
+  onExplore: () => void;
+}) {
   const chartBars = [
     "h-[38%]",
     "h-[58%]",
@@ -23,16 +31,16 @@ export function HeroSection({ onAction }: { onAction: (label: string) => void })
       <div className="relative max-w-2xl">
 
         <h1 className="text-3xl font-bold tracking-[-.035em] text-slate-50 sm:text-[40px] sm:leading-[1.08]">
-          Good afternoon !<span aria-hidden="true"></span>
+          Good afternoon{name ? `, ${name}` : ""}!
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400 sm:text-base">
           Build, organize and share your AI prompts effortlessly.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Button onClick={() => onAction("New prompt created")}>
+          <Button onClick={onCreatePrompt}>
             <Plus className="size-4" /> New prompt
           </Button>
-          <Button variant="secondary" onClick={() => onAction("Community opened")}>
+          <Button variant="secondary" onClick={onExplore}>
             Explore community <ArrowRight className="size-4" />
           </Button>
         </div>
